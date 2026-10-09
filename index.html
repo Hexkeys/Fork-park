@@ -42,7 +42,7 @@ if(won){ctx.fillStyle='#070b1dcc';ctx.fillRect(0,0,W,H);text('QUANTUM SYNC!',W/2
 requestAnimationFrame(render)}
 function collide(p){p.ground=false;for(const b of world.platforms){if(p.vy>=0&&p.x+p.w>b.x&&p.x<b.x+b.w&&p.y+p.h>=b.y&&p.y+p.h-p.vy<=b.y){p.y=b.y-p.h;p.vy=0;p.ground=true}}}
 function update(){const p=mePlayer;let ax=(keys.right?1:0)-(keys.left?1:0);p.vx+=ax*.7;p.vx=Math.max(-5.2,Math.min(5.2,p.vx));if(!ax)p.vx*=world.friction;p.x+=p.vx;p.vy=Math.min(12,p.vy+world.gravity);p.y+=p.vy;collide(p);p.x=Math.max(0,Math.min(W-p.w,p.x));if(p.y>H+80){p.x=65;p.y=400;p.vx=p.vy=0}
-for(const [id,r] of Object.entries(remoteStates)){let q=players.get(id);if(q){q.x=r.x;q.y=r.y;q.name=r.name||'Fork buddy';q.color=r.color||q.color}}
+for(const [id,r] of Object.entries(remoteStates)){let q=players.get(id);if(q){q.x=r.x;q.y=r.y;q.name=q.name||r.name||'Fork buddy';q.color=r.color||q.color}}
 const g=world.goal;const atPortal=q=>q.x+q.w>g.x&&q.x<g.x+g.w&&q.y+q.h>g.y&&q.y<g.y+g.h;const localAtPortal=atPortal(p);const teamReady=[...players.values()].every(atPortal);if(localAtPortal&&!teamReady&&!won)document.getElementById('gameStatus').textContent='WAITING FOR PARTY…';else if(!localAtPortal&&!won)document.getElementById('gameStatus').textContent='READY TO PLAY';if(localAtPortal&&teamReady&&!won){won=true;document.getElementById('gameStatus').textContent='PARTY PORTAL CLEARED!';setTimeout(()=>{won=false;p.x=65;p.y=400;p.vx=0;p.vy=0;document.getElementById('gameStatus').textContent='READY TO PLAY'},2600)}
 if(Date.now()-lastSend>50){broadcast({type:'state',player:{id:me,name:mePlayer.name,x:p.x,y:p.y,color:p.color}});lastSend=Date.now()}requestAnimationFrame(update)}
 function broadcast(msg){connections.forEach(c=>{if(c.open)try{c.send(msg)}catch(e){}})}
