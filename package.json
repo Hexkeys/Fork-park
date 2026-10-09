@@ -1,0 +1,18 @@
+{
+  "name": "fork-park",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fork Park: a cooperative fork-themed platform game with WebSocket parties",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "check": "node scripts/check-inline-js.cjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  }
+}
