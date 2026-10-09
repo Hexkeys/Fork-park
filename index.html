@@ -12,51 +12,124 @@
 <header class="top"><div><div class="logo">🍴 FORK <span>PARK</span></div><div class="sub">QUANTUM CHAOS • CO-OP PLATFORM PARTY</div></div><div class="pill">BUILD 01 · BROWSER GAME</div></header>
 <div class="layout"><section class="gamebox"><div class="gamehead"><strong id="levelLabel">LEVEL 01 — THE SPLIT</strong><span class="status" id="gameStatus">READY TO PLAY</span></div><canvas id="game" width="960" height="540" aria-label="Fork Park platform game"></canvas>
 <div class="touch"><div class="move"><button id="leftBtn" aria-label="Move left">◀</button><button id="rightBtn" aria-label="Move right">▶</button></div><button class="jump" id="jumpBtn">JUMP ↟</button></div>
-</section><aside class="side"><section class="panel"><h3>🌀 Party portal</h3><p>Play together! Create a party and share its code, or enter a friend's code to join. Everyone needs this page open.</p><button id="hostBtn" style="width:100%">Create party</button><div class="partycode" id="partyCode">------</div><div class="partyrow"><input id="joinCode" maxlength="8" placeholder="PARTY CODE" aria-label="Party code"><button id="joinBtn">Join</button></div><p class="hint" id="netStatus">Solo mode · no party connected</p></section>
+</section><aside class="side"><section class="panel"><h3>🌀 Party portal</h3><p>Create a room on the game server and share its six-character code. Up to eight players can join the same party.</p><button id="hostBtn" style="width:100%">Create party</button><div class="partycode" id="partyCode">------</div><div class="partyrow"><input id="joinCode" maxlength="6" autocapitalize="characters" autocomplete="off" placeholder="PARTY CODE" aria-label="Party code"><button id="joinBtn">Join</button></div><p class="hint" id="netStatus">Solo mode · no party connected</p></section>
 <section class="panel"><h3>👾 Party members</h3><div id="players" class="players"><div class="player"><span>You · Exploding Fork</span><span class="pill">HOST</span></div></div><p class="hint">Co-op objective: reach the glowing portal together.</p></section>
 <section class="panel"><h3>🎮 Controls</h3><p><b>Move:</b> A / D or ← / →</p><p><b>Jump:</b> W, ↑, or Space</p><p><b>Mobile:</b> left and right buttons on the left; jump on the right.</p><p><b>Fork powers:</b> stand on the cyan quantum pads and use teamwork to cross the gaps.</p></section></aside></div>
-<div class="bottom">Fork Park · Exploding Fork + Quantum Fork. Party networking uses PeerJS signaling; connection availability depends on the network.</div>
+<div class="bottom">Fork Park · Exploding Fork + Quantum Fork. Parties are managed by the Fork Park WebSocket service.</div>
 </main>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
-(()=>{
-const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+(() => {
+'use strict';
+const canvas = document.getElementById('game');
+const ctx = canvas && canvas.getContext('2d');
+if (!canvas || !ctx) {
+  document.getElementById('gameStatus').textContent = 'Canvas is not supported in this browser';
+  return;
+}
 const W=960,H=540,keys={left:false,right:false},players=new Map();
-let me='p'+Math.random().toString(36).slice(2,8),peer=null,connections=[],host=false,roomCode='',remoteStates={},lastSend=0,won=false;
-const world={gravity:.62,friction:.82,level:1,goal:{x:875,y:385,w:42,h:70},platforms:[
-{x:0,y:470,w:245,h:70,type:'solid'},{x:300,y:425,w:145,h:22,type:'quantum'},{x:495,y:375,w:125,h:22,type:'solid'},{x:665,y:430,w:115,h:22,type:'quantum'},{x:820,y:455,w:140,h:85,type:'solid'},{x:115,y:350,w:85,h:16,type:'solid'},{x:535,y:270,w:95,h:16,type:'quantum'}
-]};
 const colors=['#5df4ff','#ff5ca8','#c7ff65','#b18cff','#ffb45d'];
+let me='solo',socket=null,socketReady=false,host=false,ownerId=null,roomCode='';
+let remoteStates=Object.create(null),lastSend=0,won=false,reconnectTimer=null;
+const world={gravity:.62,friction:.82,goal:{x:875,y:385,w:42,h:70},platforms:[
+{x:0,y:470,w:245,h:70,type:'solid'},{x:300,y:425,w:145,h:22,type:'quantum'},
+{x:495,y:375,w:125,h:22,type:'solid'},{x:665,y:430,w:115,h:22,type:'quantum'},
+{x:820,y:455,w:140,h:85,type:'solid'},{x:115,y:350,w:85,h:16,type:'solid'},
+{x:535,y:270,w:95,h:16,type:'quantum'}]};
 const mePlayer={id:me,name:'Exploding Fork',x:65,y:410,vx:0,vy:0,w:30,h:42,color:colors[1],ground:false};
 players.set(me,mePlayer);
+function setNetworkStatus(message){document.getElementById('netStatus').textContent=message}
+function setGameStatus(message){document.getElementById('gameStatus').textContent=message}
 function text(s,x,y,size=16,color='#f4f7ff',align='left'){ctx.font='700 '+size+'px system-ui';ctx.fillStyle=color;ctx.textAlign=align;ctx.fillText(s,x,y)}
-function drawFork(p){ctx.save();ctx.translate(p.x+p.w/2,p.y+p.h/2);ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=14;ctx.beginPath();ctx.roundRect(-p.w/2,-p.h/2+8,p.w,p.h-8,8);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#091127';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-8,-p.h/2+9);ctx.lineTo(-8,-p.h/2-7);ctx.moveTo(0,-p.h/2+9);ctx.lineTo(0,-p.h/2-10);ctx.moveTo(8,-p.h/2+9);ctx.lineTo(8,-p.h/2-7);ctx.stroke();ctx.fillStyle='#091127';ctx.fillRect(-7,-2,4,4);ctx.fillRect(4,-2,4,4);ctx.restore();text(p.name,p.x+p.w/2,p.y-10,12,p.color,'center')}
+function drawFork(p){
+  ctx.save();ctx.translate(p.x+p.w/2,p.y+p.h/2);ctx.fillStyle=p.color||colors[0];
+  ctx.shadowColor=p.color||colors[0];ctx.shadowBlur=14;ctx.beginPath();
+  ctx.roundRect(-p.w/2,-p.h/2+8,p.w,p.h-8,8);ctx.fill();ctx.shadowBlur=0;
+  ctx.strokeStyle='#091127';ctx.lineWidth=3;ctx.beginPath();
+  ctx.moveTo(-8,-p.h/2+9);ctx.lineTo(-8,-p.h/2-7);ctx.moveTo(0,-p.h/2+9);
+  ctx.lineTo(0,-p.h/2-10);ctx.moveTo(8,-p.h/2+9);ctx.lineTo(8,-p.h/2-7);ctx.stroke();
+  ctx.fillStyle='#091127';ctx.fillRect(-7,-2,4,4);ctx.fillRect(4,-2,4,4);ctx.restore();
+  text(p.name||'Fork buddy',p.x+p.w/2,p.y-10,12,p.color||'#f4f7ff','center');
+}
 function render(){
-ctx.clearRect(0,0,W,H);const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#101b43');bg.addColorStop(1,'#090d20');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-for(let i=0;i<70;i++){let x=(i*137)%W,y=(i*71)%350;ctx.fillStyle=i%3?'#637db455':'#5df4ff55';ctx.fillRect(x,y,2,2)}
-ctx.strokeStyle='#5df4ff14';ctx.lineWidth=1;for(let x=0;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
-world.platforms.forEach(p=>{ctx.fillStyle=p.type==='quantum'?'#163f59':'#253253';ctx.strokeStyle=p.type==='quantum'?'#5df4ff':'#65769f';ctx.lineWidth=2;ctx.shadowColor=p.type==='quantum'?'#5df4ff':'transparent';ctx.shadowBlur=p.type==='quantum'?15:0;ctx.beginPath();ctx.roundRect(p.x,p.y,p.w,p.h,6);ctx.fill();ctx.stroke();ctx.shadowBlur=0;if(p.type==='quantum'){ctx.fillStyle='#5df4ff';ctx.fillRect(p.x+10,p.y+4,Math.max(0,p.w-20),2)}});
-const g=world.goal;ctx.save();ctx.shadowColor='#c7ff65';ctx.shadowBlur=25;ctx.strokeStyle='#c7ff65';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(g.x+g.w/2,g.y+g.h/2,g.w/2,g.h/2,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#c7ff6520';ctx.fill();ctx.restore();text('EXIT',g.x+g.w/2,g.y-8,12,'#c7ff65','center');
-players.forEach(drawFork);
-if(won){ctx.fillStyle='#070b1dcc';ctx.fillRect(0,0,W,H);text('QUANTUM SYNC!',W/2,220,42,'#c7ff65','center');text('You reached the portal. Nice teamwork!',W/2,265,20,'#f4f7ff','center');text('Move on to replay the level.',W/2,305,15,'#a8b7dc','center')}
-requestAnimationFrame(render)}
+  ctx.clearRect(0,0,W,H);const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#101b43');bg.addColorStop(1,'#090d20');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  for(let i=0;i<70;i++){const x=(i*137)%W,y=(i*71)%350;ctx.fillStyle=i%3?'#637db455':'#5df4ff55';ctx.fillRect(x,y,2,2)}
+  ctx.strokeStyle='#5df4ff14';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  world.platforms.forEach(p=>{const q=p.type==='quantum';ctx.fillStyle=q?'#163f59':'#253253';ctx.strokeStyle=q?'#5df4ff':'#65769f';ctx.lineWidth=2;ctx.shadowColor=q?'#5df4ff':'transparent';ctx.shadowBlur=q?15:0;ctx.beginPath();ctx.roundRect(p.x,p.y,p.w,p.h,6);ctx.fill();ctx.stroke();ctx.shadowBlur=0;if(q){ctx.fillStyle='#5df4ff';ctx.fillRect(p.x+10,p.y+4,Math.max(0,p.w-20),2)}});
+  const g=world.goal;ctx.save();ctx.shadowColor='#c7ff65';ctx.shadowBlur=25;ctx.strokeStyle='#c7ff65';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(g.x+g.w/2,g.y+g.h/2,g.w/2,g.h/2,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#c7ff6520';ctx.fill();ctx.restore();text('EXIT',g.x+g.w/2,g.y-8,12,'#c7ff65','center');
+  players.forEach(drawFork);
+  if(won){ctx.fillStyle='#070b1dcc';ctx.fillRect(0,0,W,H);text('QUANTUM SYNC!',W/2,220,42,'#c7ff65','center');text('Everyone made it to the portal!',W/2,265,20,'#f4f7ff','center');text('Get ready to go again.',W/2,305,15,'#a8b7dc','center')}
+  requestAnimationFrame(render);
+}
 function collide(p){p.ground=false;for(const b of world.platforms){if(p.vy>=0&&p.x+p.w>b.x&&p.x<b.x+b.w&&p.y+p.h>=b.y&&p.y+p.h-p.vy<=b.y){p.y=b.y-p.h;p.vy=0;p.ground=true}}}
-function update(){const p=mePlayer;let ax=(keys.right?1:0)-(keys.left?1:0);p.vx+=ax*.7;p.vx=Math.max(-5.2,Math.min(5.2,p.vx));if(!ax)p.vx*=world.friction;p.x+=p.vx;p.vy=Math.min(12,p.vy+world.gravity);p.y+=p.vy;collide(p);p.x=Math.max(0,Math.min(W-p.w,p.x));if(p.y>H+80){p.x=65;p.y=400;p.vx=p.vy=0}
-for(const [id,r] of Object.entries(remoteStates)){let q=players.get(id);if(q){q.x=r.x;q.y=r.y;q.name=q.name||r.name||'Fork buddy';q.color=r.color||q.color}}
-const g=world.goal;const atPortal=q=>q.x+q.w>g.x&&q.x<g.x+g.w&&q.y+q.h>g.y&&q.y<g.y+g.h;const localAtPortal=atPortal(p);const teamReady=[...players.values()].every(atPortal);if(localAtPortal&&!teamReady&&!won)document.getElementById('gameStatus').textContent='WAITING FOR PARTY…';else if(!localAtPortal&&!won)document.getElementById('gameStatus').textContent='READY TO PLAY';if(localAtPortal&&teamReady&&!won){won=true;document.getElementById('gameStatus').textContent='PARTY PORTAL CLEARED!';setTimeout(()=>{won=false;p.x=65;p.y=400;p.vx=0;p.vy=0;document.getElementById('gameStatus').textContent='READY TO PLAY'},2600)}
-if(Date.now()-lastSend>50){broadcast({type:'state',player:{id:me,name:mePlayer.name,x:p.x,y:p.y,color:p.color}});lastSend=Date.now()}requestAnimationFrame(update)}
-function broadcast(msg){connections.forEach(c=>{if(c.open)try{c.send(msg)}catch(e){}})}
-function roster(){const el=document.getElementById('players');el.innerHTML='';players.forEach((p,id)=>{let d=document.createElement('div');d.className='player';let a=document.createElement('span');a.textContent=id===me?'You · '+p.name:p.name;let b=document.createElement('span');b.className='pill';b.textContent=id===me?(host?'HOST':'YOU'):'CONNECTED';d.append(a,b);el.append(d)})}
-function handle(c){connections.push(c);c.on('open',()=>{document.getElementById('netStatus').textContent='Connected · '+connections.filter(x=>x.open).length+' link(s)';if(host)c.send({type:'welcome',host:me,players:[...players.values()].map(p=>({id:p.id,name:p.name,x:p.x,y:p.y,color:p.color}))});else c.send({type:'hello',player:{id:me,name:mePlayer.name,x:mePlayer.x,y:mePlayer.y,color:mePlayer.color}});});
-c.on('data',m=>{if(!m)return;if(m.type==='hello'&&host){const p=m.player;if(!p||typeof p.id!=='string')return;c.gamePlayerId=p.id;p.color=colors[players.size%colors.length];p.name=players.size%2?'Quantum Fork':'Exploding Fork';players.set(p.id,{...p,w:30,h:42,vx:0,vy:0});broadcast({type:'join',player:p});roster();}else if(m.type==='welcome'){(m.players||[]).forEach(p=>{if(p&&p.id!==me)players.set(p.id,{...p,w:30,h:42,vx:0,vy:0})});roster();}else if(m.type==='join'){const p=m.player;if(p&&p.id!==me){players.set(p.id,{...p,w:30,h:42,vx:0,vy:0});roster();}}else if(m.type==='state'&&m.player&&m.player.id!==me){const p=m.player;remoteStates[p.id]=p;if(!players.has(p.id))players.set(p.id,{...p,w:30,h:42,vx:0,vy:0});if(host)broadcast({type:'state',player:p});}else if(m.type==='leave'&&m.id!==me){players.delete(m.id);delete remoteStates[m.id];roster();}});c.on('close',()=>{connections=connections.filter(x=>x!==c);if(host&&c.gamePlayerId){const departed=c.gamePlayerId;players.delete(departed);delete remoteStates[departed];broadcast({type:'leave',id:departed});roster();}else if(!host){players.clear();players.set(me,mePlayer);remoteStates={};roster();}document.getElementById('netStatus').textContent='A party connection closed';});c.on('error',()=>{document.getElementById('netStatus').textContent='Connection issue · check the code/network';});}
-function resetParty(){if(peer)peer.destroy();peer=null;connections=[];players.clear();players.set(me,mePlayer);remoteStates={};host=false;roomCode='';document.getElementById('partyCode').textContent='------';roster()}
-document.getElementById('joinBtn').onclick=()=>{let code=document.getElementById('joinCode').value.trim().toLowerCase();if(!code)return;document.getElementById('netStatus').textContent='Looking for party…';if(!window.Peer){document.getElementById('netStatus').textContent='Party networking could not load. Try reloading.';return}resetParty();peer=new Peer();peer.on('open',()=>{let c=peer.connect('forkpark'+code,{reliable:true});handle(c);document.getElementById('partyCode').textContent=code.toUpperCase();document.getElementById('netStatus').textContent='Connecting…';});peer.on('error',e=>document.getElementById('netStatus').textContent='Could not join · check the code ('+e.type+')');};
-// Use a stable peer ID derived from the party code so joiners can find the host.
-document.getElementById('hostBtn').onclick=()=>{if(!window.Peer){document.getElementById('netStatus').textContent='Party networking unavailable';return}resetParty();host=true;roomCode=Math.random().toString(36).slice(2,8);const id='forkpark'+roomCode;peer=new Peer(id);document.getElementById('netStatus').textContent='Creating party…';peer.on('open',()=>{document.getElementById('partyCode').textContent=roomCode.toUpperCase();document.getElementById('joinCode').value=roomCode;document.getElementById('netStatus').textContent='Party ready · share your code';});peer.on('connection',handle);peer.on('error',e=>{document.getElementById('netStatus').textContent='Party error: '+e.type+'. Try creating another party.'})};
+function atPortal(p){const g=world.goal;return p.x+p.w>g.x&&p.x<g.x+g.w&&p.y+p.h>g.y&&p.y<g.y+g.h}
+function update(){
+  const p=mePlayer,ax=(keys.right?1:0)-(keys.left?1:0);p.vx+=ax*.7;p.vx=Math.max(-5.2,Math.min(5.2,p.vx));if(!ax)p.vx*=world.friction;
+  p.x+=p.vx;p.vy=Math.min(12,p.vy+world.gravity);p.y+=p.vy;collide(p);p.x=Math.max(0,Math.min(W-p.w,p.x));
+  if(p.y>H+80){p.x=65;p.y=400;p.vx=0;p.vy=0}
+  for(const [id,r] of Object.entries(remoteStates)){const q=players.get(id);if(q){q.x=r.x;q.y=r.y;q.name=r.name||q.name||'Fork buddy';q.color=r.color||q.color}}
+  const at=atPortal(p),teamReady=[...players.values()].every(atPortal);
+  if(at&&!teamReady&&!won)setGameStatus('WAITING FOR PARTY…');else if(!at&&!won)setGameStatus('READY TO PLAY');
+  if(at&&teamReady&&!won){won=true;setGameStatus('PARTY PORTAL CLEARED!');window.setTimeout(()=>{won=false;p.x=65;p.y=400;p.vx=0;p.vy=0;setGameStatus('READY TO PLAY')},2600)}
+  if(socket&&socket.readyState===WebSocket.OPEN&&roomCode&&Date.now()-lastSend>50){try{socket.send(JSON.stringify({type:'state',x:p.x,y:p.y}));lastSend=Date.now()}catch{setNetworkStatus('Movement sync interrupted. Reconnecting…')}}
+  requestAnimationFrame(update);
+}
+function roster(){
+  const el=document.getElementById('players');el.replaceChildren();
+  players.forEach((p,id)=>{const d=document.createElement('div');d.className='player';const name=document.createElement('span');name.textContent=id===me?'You · '+p.name:p.name;const status=document.createElement('span');status.className='pill';status.textContent=id===ownerId?'HOST':id===me?'YOU':'CONNECTED';d.append(name,status);el.append(d)});
+}
+function setSoloState(){
+  me='solo';ownerId=null;host=false;roomCode='';remoteStates=Object.create(null);
+  mePlayer.id=me;mePlayer.name='Exploding Fork';mePlayer.color=colors[1];mePlayer.x=65;mePlayer.y=410;mePlayer.vx=0;mePlayer.vy=0;
+  players.clear();players.set(me,mePlayer);document.getElementById('partyCode').textContent='------';roster();
+}
+function applyParty(m){
+  if(typeof m.playerId!=='string'||!Array.isArray(m.players)){setNetworkStatus('The server returned an invalid party response.');return}
+  me=m.playerId;ownerId=m.ownerId||null;host=ownerId===me;roomCode=m.code;remoteStates=Object.create(null);players.clear();
+  for(const item of m.players){if(!item||typeof item.id!=='string')continue;
+    if(item.id===me){mePlayer.id=me;mePlayer.name=item.name||'Exploding Fork';mePlayer.color=item.color||colors[1];mePlayer.x=Number.isFinite(item.x)?item.x:65;mePlayer.y=Number.isFinite(item.y)?item.y:410;mePlayer.vx=0;mePlayer.vy=0;players.set(me,mePlayer)}
+    else{const r={...item,w:30,h:42,vx:0,vy:0,ground:false};players.set(r.id,r);remoteStates[r.id]={...item}}
+  }
+  if(!players.has(me))players.set(me,mePlayer);
+  document.getElementById('partyCode').textContent=roomCode;document.getElementById('joinCode').value=roomCode;roster();
+  setNetworkStatus('Party '+roomCode+' connected · '+players.size+' player(s)');
+}
+function handleServerMessage(m){
+  if(!m||typeof m.type!=='string')return;
+  if(m.type==='party_created'||m.type==='party_joined'){applyParty(m);return}
+  if(m.type==='player_joined'&&m.player&&m.player.id!==me){const p={...m.player,w:30,h:42,vx:0,vy:0,ground:false};players.set(p.id,p);remoteStates[p.id]={...m.player};if(m.ownerId)ownerId=m.ownerId;host=ownerId===me;roster();setNetworkStatus('Party '+roomCode+' · '+players.size+' player(s)');return}
+  if(m.type==='player_state'&&m.player&&m.player.id!==me){const p=m.player;remoteStates[p.id]=p;if(!players.has(p.id)){players.set(p.id,{...p,w:30,h:42,vx:0,vy:0,ground:false});roster()}return}
+  if(m.type==='player_left'){players.delete(m.id);delete remoteStates[m.id];if(m.ownerId)ownerId=m.ownerId;host=ownerId===me;roster();setNetworkStatus(roomCode?'Party '+roomCode+' · '+players.size+' player(s)':'A party member left');return}
+  if(m.type==='party_update'){ownerId=m.ownerId||ownerId;host=ownerId===me;roster();return}
+  if(m.type==='left_party'){setSoloState();setNetworkStatus(socketReady?'Connected to game service · create or join a party':'Reconnecting to game service…');return}
+  if(m.type==='error')setNetworkStatus(m.message||'Party request failed.');
+}
+function connectSocket(){
+  if(!window.WebSocket){setNetworkStatus('This browser does not support multiplayer WebSockets.');return null}
+  if(!window.location.host){setNetworkStatus('Open the game through the web service to use parties.');return null}
+  if(socket&&(socket.readyState===WebSocket.OPEN||socket.readyState===WebSocket.CONNECTING))return socket;
+  const protocol=window.location.protocol==='https:'?'wss:':'ws:',current=new WebSocket(protocol+'//'+window.location.host+'/ws');socket=current;socketReady=false;setNetworkStatus('Connecting to Fork Park service…');
+  current.addEventListener('open',()=>{if(socket!==current)return;socketReady=true;setNetworkStatus('Connected to game service · create or join a party')});
+  current.addEventListener('message',event=>{if(socket!==current)return;try{handleServerMessage(JSON.parse(event.data))}catch{setNetworkStatus('Received an invalid message from the game service.')}});
+  current.addEventListener('error',()=>{if(socket===current)setNetworkStatus('Could not reach the game service.')});
+  current.addEventListener('close',()=>{if(socket!==current)return;socket=null;socketReady=false;setSoloState();setNetworkStatus('Server connection lost · reconnecting…');if(reconnectTimer)window.clearTimeout(reconnectTimer);reconnectTimer=window.setTimeout(()=>{reconnectTimer=null;if(!socket&&!document.hidden)connectSocket()},1500)});
+  return current;
+}
+function sendWhenReady(message){
+  let current=socket;if(!current||current.readyState===WebSocket.CLOSED)current=connectSocket();if(!current)return;
+  const sendMessage=()=>{if(socket!==current||current.readyState!==WebSocket.OPEN)return;try{current.send(JSON.stringify(message))}catch{setNetworkStatus('Could not send party request. Try again.')}};
+  if(current.readyState===WebSocket.OPEN)sendMessage();else current.addEventListener('open',sendMessage,{once:true});
+}
+document.getElementById('hostBtn').addEventListener('click',()=>{setNetworkStatus('Creating party…');sendWhenReady({type:'create_party'})});
+document.getElementById('joinBtn').addEventListener('click',()=>{const code=document.getElementById('joinCode').value.trim().toUpperCase();if(!/^[A-Z2-9]{6}$/.test(code)){setNetworkStatus('Enter the six-character party code.');return}setNetworkStatus('Joining party '+code+'…');sendWhenReady({type:'join_party',code})});
 window.addEventListener('keydown',e=>{if(e.target instanceof HTMLElement&&e.target.matches('input,textarea,select'))return;if(['ArrowLeft','ArrowRight','ArrowUp',' '].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=true;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=true;if((e.key==='ArrowUp'||e.key.toLowerCase()==='w'||e.key===' ')&&mePlayer.ground)mePlayer.vy=-12});
-window.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=false;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=false});window.addEventListener('blur',()=>{keys.left=false;keys.right=false});
-function bindHold(id,key){let b=document.getElementById(id);const on=e=>{e.preventDefault();keys[key]=true};const off=e=>{e.preventDefault();keys[key]=false};b.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,off))}
-bindHold('leftBtn','left');bindHold('rightBtn','right');document.getElementById('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mePlayer.ground)mePlayer.vy=-12});
-render();update();
+window.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=false;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=false});
+window.addEventListener('blur',()=>{keys.left=false;keys.right=false});
+function bindHold(id,key){const b=document.getElementById(id),on=e=>{e.preventDefault();keys[key]=true},off=e=>{e.preventDefault();keys[key]=false};b.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(type=>b.addEventListener(type,off))}
+bindHold('leftBtn','left');bindHold('rightBtn','right');
+document.getElementById('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mePlayer.ground)mePlayer.vy=-12});
+connectSocket();render();update();
 })();
 </script></body></html>
