@@ -2,16 +2,15 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 const html = fs.readFileSync('index.html', 'utf8');
-const inlineScripts = [...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi)]
-  .map((match) => match[1].trim())
-  .filter(Boolean);
-
-if (inlineScripts.length === 0) {
-  throw new Error('No inline browser JavaScript was found in index.html');
+const startTag = '<script>';
+const start = html.indexOf(startTag);
+const end = start < 0 ? -1 : html.indexOf('</script>', start + startTag.length);
+if (start < 0 || end < 0) {
+  throw new Error('Could not find the inline browser script in index.html');
 }
-for (const [index, source] of inlineScripts.entries()) {
-  new vm.Script(source, { filename: `index.html:inline-script-${index + 1}` });
-}
+const inlineScript = html.slice(start + startTag.length, end).trim();
+if (!inlineScript) throw new Error('The inline browser script is empty');
+new vm.Script(inlineScript, { filename: 'index.html:inline-script' });
 
 const server = fs.readFileSync('server.js', 'utf8');
 const render = fs.readFileSync('render.yaml', 'utf8');
@@ -39,4 +38,4 @@ const failures = checks.filter(([, passed]) => !passed).map(([name]) => name);
 if (failures.length) {
   throw new Error('Smoke checks failed: ' + failures.join(', '));
 }
-console.log(`Passed ${checks.length} game/service/deployment smoke checks and parsed ${inlineScripts.length} inline script(s).`);
+console.log(`Passed ${checks.length} game/service/deployment smoke checks and parsed the inline browser script.`);
