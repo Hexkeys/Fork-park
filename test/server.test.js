@@ -9,25 +9,18 @@ function nextMessage(socket, predicate, timeoutMs = 2500) {
       cleanup();
       reject(new Error('Timed out waiting for WebSocket message'));
     }, timeoutMs);
-
     function onMessage(raw) {
       let message;
-      try {
-        message = JSON.parse(raw.toString());
-      } catch {
-        return;
-      }
+      try { message = JSON.parse(raw.toString()); } catch { return; }
       if (predicate(message)) {
         cleanup();
         resolve(message);
       }
     }
-
     function cleanup() {
       clearTimeout(timer);
       socket.off('message', onMessage);
     }
-
     socket.on('message', onMessage);
   });
 }
@@ -38,10 +31,9 @@ function sendAndWait(socket, outgoing, predicate) {
   return incoming;
 }
 
-test('HTTP health, party creation/join, state relay, validation, and capacity', async () => {
+test('web service health, party flow, relayed positions, validation, and party capacity', async () => {
   const app = createForkParkServer();
   const clients = new Set();
-
   await new Promise((resolve, reject) => {
     app.server.once('error', reject);
     app.server.listen(0, '127.0.0.1', resolve);
@@ -76,28 +68,49 @@ test('HTTP health, party creation/join, state relay, validation, and capacity', 
     assert.equal(created.ownerId, created.playerId);
 
     const guests = [];
-    const guestCount = MAX_PARTY_SIZE - 1;
     let firstGuest;
-
-    for (let i = 0; i < guestCount; i += 1) {
+    for (let i = 0; i < MAX_PARTY_SIZE - 1; i += 1) {
       const guest = await connect();
       guests.push(guest);
-      const joined = await sendAndWait(guest, { type: 'join_party', code: created.code }, (m) => m.type === 'party_joined');
+      const joined = await sendAndWait(
+        guest,
+        { type: 'join_party', code: created.code },
+        (m) => m.type === 'party_joined'
+      );
       assert.equal(joined.code, created.code);
       assert.equal(joined.players.length, i + 2);
       if (i === 0) firstGuest = guest;
     }
 
-    const hostAtCapacity = nextMessage(host, (m) => m.type === 'player_joined');
-    // One extra connection must be rejected without changing the active room.
+    const moveMessage = nextMessage(
+      host,
+      (m) => m.type === 'player_state' && Number.isFinite(m.player && m.player.x) && m.player.x === 123
+    );
+    firstGuest.send(JSON.stringify({ type: 'state', x: 123, y: 234 }));
+    const relayed = await moveMessage;
+    assert.equal(relayed.player.y, 234);
+    assert.equal(relayed.player.id, guests.length ? relayed.player.id : null);
+
     const overflow = await connect();
     guests.push(overflow);
-    const full = await sendAndWait(overflow, { type: 'join_party', code: created.code }, (m) => m.type === 'error');
+    const full = await sendAndWait(
+      overflow,
+      { type: 'join_party', code: created.code },
+      (m) => m.type === 'error'
+    );
     assert.equal(full.code, 'PARTY_FULL');
-    await hostAtCapacity.catch(() => null);
 
-    const movePromise = nextMessage(host, (m) => m.type === 'player_state' && m.player && m.player.id === (awaitableId = awaitableId));
-    void movePromise.catch(() => null);
+    const invalid = await sendAndWait(
+      overflow,
+      { type: 'join_party', code: 'BAD' },
+      (m) => m.type === 'error'
+    );
+    assert.equal(invalid.code, 'INVALID_CODE');
+
+    const leaveNotice = nextMessage(host, (m) => m.type === 'player_left' && m.id === relayed.player.id);
+    firstGuest.close();
+    const left = await leaveNotice;
+    assert.equal(left.players.length, MAX_PARTY_SIZE - 1);
   } finally {
     for (const client of clients) {
       if (client.readyState !== WebSocket.CLOSED) client.terminate();
