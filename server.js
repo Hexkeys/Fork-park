@@ -194,24 +194,19 @@ function createForkParkServer() {
         return;
       }
 
-      if (socket.roomCode === code) {
-        const room = rooms.get(code);
-        if (room) {
-          send(socket, {
-            type: 'party_joined',
-            code,
-            playerId: socket.playerId,
-            ownerId: room.ownerId,
-            players: snapshot(room),
-          });
-          return;
-        }
-      }
-
-      leaveParty(socket);
       const room = rooms.get(code);
       if (!room) {
         fail(socket, 'PARTY_NOT_FOUND', 'That party was not found. Check the code and try again.');
+        return;
+      }
+      if (socket.roomCode === code) {
+        send(socket, {
+          type: 'party_joined',
+          code,
+          playerId: socket.playerId,
+          ownerId: room.ownerId,
+          players: snapshot(room),
+        });
         return;
       }
       if (room.players.size >= MAX_PARTY_SIZE) {
@@ -219,6 +214,8 @@ function createForkParkServer() {
         return;
       }
 
+      // Validate the destination before removing the player from their current room.
+      leaveParty(socket);
       const player = addPlayer(socket, room);
       send(socket, {
         type: 'party_joined',
