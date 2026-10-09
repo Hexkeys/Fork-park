@@ -123,7 +123,7 @@ function sendWhenReady(message){
   if(current.readyState===WebSocket.OPEN)sendMessage();else current.addEventListener('open',sendMessage,{once:true});
 }
 document.getElementById('hostBtn').addEventListener('click',()=>{setNetworkStatus('Creating party…');sendWhenReady({type:'create_party'})});
-document.getElementById('joinBtn').addEventListener('click',()=>{const code=document.getElementById('joinCode').value.trim().toUpperCase();if(!/^[A-Z2-9]{6}$/.test(code)){setNetworkStatus('Enter the six-character party code.');return}setNetworkStatus('Joining party '+code+'…');sendWhenReady({type:'join_party',code})});
+document.getElementById('joinBtn').addEventListener('click',()=>{const code=document.getElementById('joinCode').value.trim().toUpperCase();if(!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/.test(code)){setNetworkStatus('Enter the six-character party code.');return}setNetworkStatus('Joining party '+code+'…');sendWhenReady({type:'join_party',code})});
 window.addEventListener('keydown',e=>{if(e.target instanceof HTMLElement&&e.target.matches('input,textarea,select'))return;if(['ArrowLeft','ArrowRight','ArrowUp',' '].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=true;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=true;if((e.key==='ArrowUp'||e.key.toLowerCase()==='w'||e.key===' ')&&mePlayer.ground)mePlayer.vy=-12});
 window.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=false;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=false});
 window.addEventListener('blur',()=>{keys.left=false;keys.right=false});
