@@ -69,6 +69,7 @@ test('web service health, party flow, relayed positions, validation, and party c
 
     const guests = [];
     let firstGuest;
+    let firstGuestId;
     for (let i = 0; i < MAX_PARTY_SIZE - 1; i += 1) {
       const guest = await connect();
       guests.push(guest);
@@ -79,17 +80,17 @@ test('web service health, party flow, relayed positions, validation, and party c
       );
       assert.equal(joined.code, created.code);
       assert.equal(joined.players.length, i + 2);
-      if (i === 0) firstGuest = guest;
+      if (i === 0) { firstGuest = guest; firstGuestId = joined.playerId; }
     }
 
     const moveMessage = nextMessage(
       host,
-      (m) => m.type === 'player_state' && Number.isFinite(m.player && m.player.x) && m.player.x === 123
+      (m) => m.type === 'player_state' && m.player && m.player.id === firstGuestId && m.player.x === 123
     );
     firstGuest.send(JSON.stringify({ type: 'state', x: 123, y: 234 }));
     const relayed = await moveMessage;
     assert.equal(relayed.player.y, 234);
-    assert.equal(relayed.player.id, guests.length ? relayed.player.id : null);
+    assert.equal(relayed.player.id, firstGuestId);
 
     const overflow = await connect();
     guests.push(overflow);
@@ -107,7 +108,7 @@ test('web service health, party flow, relayed positions, validation, and party c
     );
     assert.equal(invalid.code, 'INVALID_CODE');
 
-    const leaveNotice = nextMessage(host, (m) => m.type === 'player_left' && m.id === relayed.player.id);
+    const leaveNotice = nextMessage(host, (m) => m.type === 'player_left' && m.id === firstGuestId);
     firstGuest.close();
     const left = await leaveNotice;
     assert.equal(left.players.length, MAX_PARTY_SIZE - 1);
