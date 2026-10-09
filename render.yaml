@@ -1,13 +1,11 @@
 services:
   - type: web
     name: fork-park
-    runtime: static
-    buildCommand: "echo 'No build step needed for this static game'"
-    staticPublishPath: .
-    headers:
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
-      - path: /*
-        name: Referrer-Policy
-        value: strict-origin-when-cross-origin
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
