@@ -1,22 +1,38 @@
 # Fork Park: Quantum Chaos
 
-A fork-themed co-op platform game prototype inspired by the cooperative puzzle-platform genre, with original visuals and levels.
+A fork-themed cooperative platform game with original neon visuals, quantum pads, and a portal goal.
 
-## Play
-Open `index.html` in a modern browser, or enable GitHub Pages for this repository (Settings → Pages → Deploy from a branch → `main` / `/ (root)`).
+## Play locally
+Open `index.html` in a modern browser. The game is a static site and needs no build step.
+
+## Deploy to Render
+This repo includes `render.yaml` for a Render static site.
+
+1. Sign in to Render and choose **New → Blueprint**.
+2. Connect the GitHub repository `Hexkeys/Fork-park`.
+3. Select the Blueprint from the repository root (`render.yaml`) and deploy.
+4. Render will publish `index.html` as a static website and provide the live URL.
+
+You can also create a **New → Static Site** manually, select this repo and the `main` branch, use `echo "No build step needed"` as the build command, and `.` as the publish directory.
 
 ## Controls
 - **Move left:** A or ←
 - **Move right:** D or →
 - **Jump:** W, ↑, or Space
-- **Mobile:** left/right buttons on the left side; jump button on the right
+- **Mobile:** left and right buttons on the left; jump on the right
 
 ## Party multiplayer
-1. Open the game in a browser.
-2. Click **Create party** and share the displayed party code.
-3. Friends open the same game and enter the code, then click **Join**.
+1. Open the deployed game in a browser.
+2. Click **Create party** and share the six-character party code.
+3. Friends open the same game, enter that code, and click **Join**.
 
-Party connectivity uses PeerJS's public signaling service and WebRTC. Both players need a compatible network and access to the PeerJS CDN/signaling service. This is an early prototype: movement synchronization is peer-to-peer, and it does not yet include authoritative server validation, persistent accounts, chat, matchmaking, or a robust reconnect flow.
+Party connections use PeerJS signaling and WebRTC. Players need a compatible network and access to the PeerJS CDN/signaling services. Multiplayer state is relayed through the party host, so the host must keep the page open. This remains a prototype: it has no server-authoritative physics, accounts, chat, matchmaking, or guaranteed reconnection. Public PeerJS signaling/network policies may also affect availability.
+
+## Current gameplay
+- A sample platforming course with glowing quantum platforms
+- Keyboard and touch controls
+- Peer-to-peer party codes and player position sharing
+- Portal completion and quick replay
 
 ## Theme
-Exploding Fork + Quantum Fork, neon platforms, quantum pads, and a portal goal.
+Exploding Fork + Quantum Fork.
