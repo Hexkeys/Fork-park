@@ -54,7 +54,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #ffd65a;outline-offse
 
 
 /* Exploding-fork repo visual language: terminal green, bordered screens, compact nav */
-:root{--bg:#020b05;--panel:#06150b;--line:#1c6b38;--green:#39ff72;--dim:#7dca92;--text:#e0ffe8;color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+:root{--bg:#020b05;--panel:#06150b;--line:#1c6b38;--green:#39ff72;--dim:#7dca92;--text:#e0ffe8;--cyan:#39ff72;--lime:#39ff72;--pink:#ff8e3c;color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 body{background:radial-gradient(circle at 50% -10%,#0a5c24 0,#063016 35%,#020b05 72%);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .wrap{max-width:980px}
 .terminal-header{position:sticky;top:0;z-index:25;display:flex;justify-content:space-between;align-items:center;gap:12px;margin:-18px -18px 24px;padding:18px clamp(18px,6vw,60px);border-bottom:1px solid var(--line);background:#020b05ee;backdrop-filter:blur(10px)}
@@ -191,7 +191,7 @@ if (!canvas || !ctx) {
   return;
 }
 const W=960,H=540,keys={left:false,right:false},players=new Map();
-const colors=['#5df4ff','#ff5ca8','#c7ff65','#b18cff','#ffb45d'];
+const colors=['#39ff72','#bfff4f','#ff8e3c','#8fe6ac','#e4ffd0'];
 let me='solo',socket=null,socketReady=false,host=false,ownerId=null,roomCode='';
 let remoteStates=Object.create(null),lastSend=0,won=false,reconnectTimer=null;
 const world={gravity:.62,friction:.82,goal:{x:875,y:385,w:42,h:70},platforms:[
@@ -216,15 +216,15 @@ function drawFork(p){
 }
 function render(){
   ctx.clearRect(0,0,W,H);const bg=ctx.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,'#101b43');bg.addColorStop(1,'#090d20');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-  for(let i=0;i<70;i++){const x=(i*137)%W,y=(i*71)%350;ctx.fillStyle=i%3?'#637db455':'#5df4ff55';ctx.fillRect(x,y,2,2)}
-  ctx.strokeStyle='#5df4ff14';ctx.lineWidth=1;
+  bg.addColorStop(0,'#0a3218');bg.addColorStop(1,'#020b05');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  for(let i=0;i<70;i++){const x=(i*137)%W,y=(i*71)%350;ctx.fillStyle=i%3?'#39ff7244':'#b7ffca44';ctx.fillRect(x,y,2,2)}
+  ctx.strokeStyle='#39ff7214';ctx.lineWidth=1;
   for(let x=0;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
   for(let y=0;y<H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
-  world.platforms.forEach(p=>{const q=p.type==='quantum';ctx.fillStyle=q?'#163f59':'#253253';ctx.strokeStyle=q?'#5df4ff':'#65769f';ctx.lineWidth=2;ctx.shadowColor=q?'#5df4ff':'transparent';ctx.shadowBlur=q?15:0;ctx.beginPath();ctx.roundRect(p.x,p.y,p.w,p.h,6);ctx.fill();ctx.stroke();ctx.shadowBlur=0;if(q){ctx.fillStyle='#5df4ff';ctx.fillRect(p.x+10,p.y+4,Math.max(0,p.w-20),2)}});
-  const g=world.goal;ctx.save();ctx.shadowColor='#c7ff65';ctx.shadowBlur=25;ctx.strokeStyle='#c7ff65';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(g.x+g.w/2,g.y+g.h/2,g.w/2,g.h/2,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#c7ff6520';ctx.fill();ctx.restore();text('EXIT',g.x+g.w/2,g.y-8,12,'#c7ff65','center');
+  world.platforms.forEach(p=>{const q=p.type==='quantum';ctx.fillStyle=q?'#0b2c16':'#14211a';ctx.strokeStyle=q?'#39ff72':'#285535';ctx.lineWidth=2;ctx.shadowColor=q?'#39ff72':'transparent';ctx.shadowBlur=q?15:0;ctx.beginPath();ctx.roundRect(p.x,p.y,p.w,p.h,6);ctx.fill();ctx.stroke();ctx.shadowBlur=0;if(q){ctx.fillStyle='#39ff72';ctx.fillRect(p.x+10,p.y+4,Math.max(0,p.w-20),2)}});
+  const g=world.goal;ctx.save();ctx.shadowColor='#39ff72';ctx.shadowBlur=25;ctx.strokeStyle='#39ff72';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(g.x+g.w/2,g.y+g.h/2,g.w/2,g.h/2,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#39ff7220';ctx.fill();ctx.restore();text('EXIT',g.x+g.w/2,g.y-8,12,'#39ff72','center');
   players.forEach(drawFork);
-  if(won){ctx.fillStyle='#070b1dcc';ctx.fillRect(0,0,W,H);text('QUANTUM SYNC!',W/2,220,42,'#c7ff65','center');text('Everyone made it to the portal!',W/2,265,20,'#f4f7ff','center');text('Get ready to go again.',W/2,305,15,'#a8b7dc','center')}
+  if(won){ctx.fillStyle='#070b1dcc';ctx.fillRect(0,0,W,H);text('FORK CREW SYNC!',W/2,220,42,'#39ff72','center');text('Everyone made it to the portal!',W/2,265,20,'#f4f7ff','center');text('Get ready to go again.',W/2,305,15,'#a8b7dc','center')}
   requestAnimationFrame(render);
 }
 function collide(p){p.ground=false;for(const b of world.platforms){if(p.vy>=0&&p.x+p.w>b.x&&p.x<b.x+b.w&&p.y+p.h>=b.y&&p.y+p.h-p.vy<=b.y){p.y=b.y-p.h;p.vy=0;p.ground=true}}}
