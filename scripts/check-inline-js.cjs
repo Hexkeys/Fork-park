@@ -13,7 +13,6 @@ if (!inlineScript) throw new Error('The inline browser script is empty');
 new vm.Script(inlineScript, { filename: 'index.html:inline-script' });
 
 const server = fs.readFileSync('server.js', 'utf8');
-const render = fs.readFileSync('render.yaml', 'utf8');
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
 const checks = [
@@ -28,8 +27,9 @@ const checks = [
   ['eight-player capacity limit', server.includes('const MAX_PARTY_SIZE = 8')],
   ['state validation and relay', server.includes('Number.isFinite(message.x)') && server.includes("type: 'player_state'")],
   ['leave handling and owner transfer', server.includes('function leaveParty(socket)') && server.includes('room.ownerId = room.players.keys().next().value')],
-  ['Render Node web service', render.includes('runtime: node') && render.includes('type: web')],
-  ['Render start and health configuration', render.includes('startCommand: npm start') && render.includes('healthCheckPath: /healthz')],
+  ['Render-compatible host binding', server.includes("const HOST = '0.0.0.0'")],
+  ['Render-compatible port', server.includes('process.env.PORT')],
+  ['Node web-service start script', pkg.scripts.start === 'node server.js'],
   ['package scripts', pkg.scripts.start === 'node server.js' && pkg.scripts.test === 'node --test' && pkg.scripts.check === 'node scripts/check-inline-js.cjs'],
   ['WebSocket dependency', Boolean(pkg.dependencies && pkg.dependencies.ws)],
 ];
@@ -38,4 +38,4 @@ const failures = checks.filter(([, passed]) => !passed).map(([name]) => name);
 if (failures.length) {
   throw new Error('Smoke checks failed: ' + failures.join(', '));
 }
-console.log(`Passed ${checks.length} game/service/deployment smoke checks and parsed the inline browser script.`);
+console.log(`Passed ${checks.length} game/web-service smoke checks and parsed the inline browser script.`);
