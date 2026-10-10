@@ -1,6 +1,6 @@
 # Fork Park: Quantum Chaos
 
-A fork-themed cooperative platform game featuring neon levels, quantum pads, and a real-time party system powered by a Node.js WebSocket web service.
+An Exploding Fork-inspired cooperative platform game featuring a fiery themed lobby, neon levels, quantum pads, always-visible movement buttons, and a real-time party system powered by a Node.js WebSocket web service.
 
 ## Deploy directly as a Render Web Service
 
@@ -41,7 +41,8 @@ Open http://localhost:10000. Do not open `index.html` directly from the filesyst
 - **Move left:** A or ←
 - **Move right:** D or →
 - **Jump:** W, ↑, or Space
-- **Mobile:** left/right buttons on the left; jump on the right
+- **On every device:** the left and right arrow buttons stay visible below the game, on the left; the jump button stays on the right. Keyboard controls also work on desktop.
+- **Lobby:** create a party, enter a six-character code to join, check the party roster, then select **Enter the Arena**. Use **Lobby** inside the game to return.
 
 ## Party system
 
