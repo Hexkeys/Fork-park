@@ -8,7 +8,7 @@ const PORT = Number(process.env.PORT) || 10000;
 const HOST = '0.0.0.0';
 const MAX_PARTY_SIZE = 8;
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const COLORS = ['#ff5ca8', '#5df4ff', '#c7ff65', '#b18cff', '#ffb45d'];
+const COLORS = ['#39ff72', '#ffd166', '#62e8a0', '#ff9248', '#b1ffca'];
 
 function publicPlayer(player) {
   return {
