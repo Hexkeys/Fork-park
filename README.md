@@ -36,13 +36,15 @@ npm start
 
 Open http://localhost:10000. Do not open `index.html` directly from the filesystem: multiplayer connects to the same-origin `/ws` WebSocket endpoint served by `server.js`.
 
-## Controls
+## Lobby and controls
+
+The landing page follows the Exploding-fork repo's dark terminal-green style, with a sticky network header, a game-description/rules panel, separate **Create Party** and **Join Party** forms, and a waiting lobby showing the six-character room code and crew roster. The party leader can initialize the arena once at least two players have joined.
 
 - **Move left:** A or ←
 - **Move right:** D or →
 - **Jump:** W, ↑, or Space
-- **On every device:** the left and right arrow buttons stay visible below the game, on the left; the jump button stays on the right. Keyboard controls also work on desktop.
-- **Lobby:** create a party, enter a six-character code to join, check the party roster, then select **Enter the Arena**. Use **Lobby** inside the game to return.
+- **On every device:** left and right arrow buttons stay visible below the game, on the left; the jump button stays on the right. Keyboard controls also work on desktop.
+- **Arena navigation:** use **← LOBBY** to return to your waiting room or home screen.
 
 ## Party system
 
