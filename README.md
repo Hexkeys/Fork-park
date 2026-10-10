@@ -1,6 +1,29 @@
 # Fork Park: Quantum Chaos
 
-A fork-themed cooperative platform game featuring neon levels, quantum pads, and an in-game party system powered by a Node.js WebSocket service.
+A fork-themed cooperative platform game featuring neon levels, quantum pads, and a real-time party system powered by a Node.js WebSocket web service.
+
+## Deploy directly as a Render Web Service
+
+**Create a Web Service, not a Blueprint.** There is no `render.yaml` needed for this setup.
+
+1. Open the [Render dashboard](https://dashboard.render.com/).
+2. Click **New → Web Service**.
+3. Connect your GitHub account if needed, then select `Hexkeys/Fork-park`.
+4. Configure the service with these exact settings:
+
+   | Setting | Value |
+   | --- | --- |
+   | Name | `fork-park` |
+   | Branch | `main` |
+   | Runtime / Language | `Node` |
+   | Build Command | `npm install` |
+   | Start Command | `npm start` |
+   | Health Check Path (Advanced) | `/healthz` |
+
+5. Select a plan and click **Create Web Service**.
+6. When the deployment finishes, open the `onrender.com` URL shown on the service page. The site and party WebSocket use the same URL.
+
+Render provides a public URL and supports WebSocket connections for Web Services. The server binds to `0.0.0.0` and uses Render's `PORT` environment variable.
 
 ## Run locally
 
@@ -11,18 +34,7 @@ npm install
 npm start
 ```
 
-Then open http://localhost:10000. Do not open `index.html` directly from the filesystem: multiplayer connects to the same-origin `/ws` WebSocket endpoint served by `server.js`.
-
-## Deploy on Render
-
-The root `render.yaml` defines a **Node web service**, not a static site. It installs the `ws` dependency, runs `npm start`, and uses `/healthz` as the service health check.
-
-1. Sign in to Render and select **New → Blueprint**.
-2. Connect `Hexkeys/Fork-park`.
-3. Review the service in `render.yaml` and deploy it.
-4. Open the `onrender.com` URL Render gives the service. The game and party WebSocket use that same URL.
-
-Render web services support inbound WebSocket connections. The browser automatically uses `wss://` on HTTPS deployments.
+Open http://localhost:10000. Do not open `index.html` directly from the filesystem: multiplayer connects to the same-origin `/ws` WebSocket endpoint served by `server.js`.
 
 ## Controls
 
@@ -46,14 +58,14 @@ npm run check
 npm test
 ```
 
-- `npm run check` checks the inline browser JavaScript and required service/deployment features.
+- `npm run check` parses the browser JavaScript and checks key client, server, and deployment settings.
 - `npm test` starts a temporary local server and checks HTTP health, room creation/joining, movement relays, code validation, party capacity, and disconnect handling.
 
-GitHub Actions runs the checks on pushes to `main` and pull requests.
+GitHub Actions runs these checks on pushes to `main` and pull requests.
 
 ## Limits to know
 
-Party rooms are held in server memory, so they disappear when the service restarts. This prototype is intended to run as one service instance; multiple independent instances would not share room state without a shared store. Player positions are validated and relayed by the server, but physics are still simulated on each browser, so this is not a fully authoritative anti-cheat game server. There are no accounts, chat, or saved progress yet.
+Party rooms are held in server memory, so they disappear when the service restarts. Run one service instance unless you add a shared data store; multiple independent instances won't share party state. Player positions are validated and relayed by the server, but physics are still simulated on each browser, so this isn't a fully authoritative game server. There are no accounts, chat, or saved progress yet.
 
 ## Theme
 
