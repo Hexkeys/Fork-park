@@ -178,7 +178,7 @@ function createForkParkServer() {
         fail(socket, 'PARTY_CREATE_FAILED', 'Could not create a party. Please try again.');
         return;
       }
-      const room = { code, ownerId: null, players: new Map(), started: false };
+      const room = { code, ownerId: null, players: new Map(), started: false, currentLevel: 0, currentSeed: 0 };
       rooms.set(code, room);
       const player = addPlayer(socket, room, message.name);
       room.ownerId = player.id;
@@ -262,7 +262,46 @@ function createForkParkServer() {
         code: room.code,
         ownerId: room.ownerId,
         players: snapshot(room),
+        level: room.currentLevel,
+        seed: room.currentSeed,
       });
+      return;
+    }
+
+    if (message.type === 'set_level') {
+      const room = socket.roomCode && rooms.get(socket.roomCode);
+      const player = room && room.players.get(socket.playerId);
+      if (!room || !player) {
+        fail(socket, 'NOT_IN_PARTY', 'Join a party before changing its level.');
+        return;
+      }
+      if (room.ownerId !== player.id) {
+        fail(socket, 'NOT_PARTY_LEADER', 'Only the party leader can change levels.');
+        return;
+      }
+      if (!room.started) {
+        fail(socket, 'PARTY_NOT_STARTED', 'Initialize the arena before changing levels.');
+        return;
+      }
+      if (!Number.isInteger(message.level) || message.level < 0 || message.level > 6 ||
+          !Number.isInteger(message.seed) || message.seed < 0 || message.seed > 0xffffffff) {
+        fail(socket, 'INVALID_LEVEL', 'Choose a valid level and random seed.');
+        return;
+      }
+      room.currentLevel = message.level;
+      room.currentSeed = message.seed;
+      broadcast(room, { type: 'level_changed', code: room.code, level: room.currentLevel, seed: room.currentSeed, ownerId: room.ownerId });
+      return;
+    }
+
+    if (message.type === 'puzzle_action') {
+      const room = socket.roomCode && rooms.get(socket.roomCode);
+      const player = room && room.players.get(socket.playerId);
+      if (!room || !player || !room.started) {
+        fail(socket, 'NOT_IN_PARTY', 'Start a party run before activating a puzzle switch.');
+        return;
+      }
+      broadcast(room, { type: 'puzzle_action', code: room.code, playerId: player.id });
       return;
     }
 
