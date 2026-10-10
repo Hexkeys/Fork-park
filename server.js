@@ -43,6 +43,11 @@ function playerName(index) {
   return index % 2 === 0 ? 'Exploding Fork ' + (index + 1) : 'Quantum Fork ' + (index + 1);
 }
 
+function cleanPlayerName(value, fallback) {
+  const clean = String(value ?? '').replace(/[<>]/g, '').trim().slice(0, 20);
+  return clean || fallback;
+}
+
 function createForkParkServer() {
   const rooms = new Map();
   const indexPath = path.join(__dirname, 'index.html');
@@ -138,11 +143,11 @@ function createForkParkServer() {
     }
   }
 
-  function addPlayer(socket, room) {
+  function addPlayer(socket, room, requestedName) {
     const index = room.players.size;
     const player = {
       id: randomUUID(),
-      name: playerName(index),
+      name: cleanPlayerName(requestedName, playerName(index)),
       color: COLORS[index % COLORS.length],
       x: Math.min(65 + index * 38, 900),
       y: 410,
@@ -173,9 +178,9 @@ function createForkParkServer() {
         fail(socket, 'PARTY_CREATE_FAILED', 'Could not create a party. Please try again.');
         return;
       }
-      const room = { code, ownerId: null, players: new Map() };
+      const room = { code, ownerId: null, players: new Map(), started: false };
       rooms.set(code, room);
-      const player = addPlayer(socket, room);
+      const player = addPlayer(socket, room, message.name);
       room.ownerId = player.id;
       send(socket, {
         type: 'party_created',
@@ -209,6 +214,10 @@ function createForkParkServer() {
         });
         return;
       }
+      if (room.started) {
+        fail(socket, 'PARTY_STARTED', 'That party has already entered the arena.');
+        return;
+      }
       if (room.players.size >= MAX_PARTY_SIZE) {
         fail(socket, 'PARTY_FULL', 'That party is full. The limit is eight players.');
         return;
@@ -229,6 +238,31 @@ function createForkParkServer() {
         player: publicPlayer(player),
         ownerId: room.ownerId,
       }, socket);
+      return;
+    }
+
+    if (message.type === 'start_party') {
+      const room = socket.roomCode && rooms.get(socket.roomCode);
+      const player = room && room.players.get(socket.playerId);
+      if (!room || !player) {
+        fail(socket, 'NOT_IN_PARTY', 'Create or join a party before initializing the arena.');
+        return;
+      }
+      if (room.ownerId !== player.id) {
+        fail(socket, 'NOT_PARTY_LEADER', 'Only the party leader can initialize the arena.');
+        return;
+      }
+      if (room.players.size < 2) {
+        fail(socket, 'PARTY_NEEDS_PLAYERS', 'Invite at least one crew member before launching.');
+        return;
+      }
+      room.started = true;
+      broadcast(room, {
+        type: 'party_started',
+        code: room.code,
+        ownerId: room.ownerId,
+        players: snapshot(room),
+      });
       return;
     }
 
