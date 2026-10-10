@@ -201,7 +201,7 @@ const world={gravity:.62,friction:.82,goal:{x:875,y:385,w:42,h:70},platforms:[
 {x:535,y:270,w:95,h:16,type:'quantum'}]};
 const mePlayer={id:me,name:'Exploding Fork',x:65,y:410,vx:0,vy:0,w:30,h:42,color:colors[1],ground:false};
 players.set(me,mePlayer);
-function setNetworkStatus(message){document.getElementById('netStatus').textContent=message}
+function setNetworkStatus(message){document.querySelectorAll('[data-network-status]').forEach(el=>{el.textContent=message})}
 function setGameStatus(message){document.getElementById('gameStatus').textContent=message}
 function text(s,x,y,size=16,color='#f4f7ff',align='left'){ctx.font='700 '+size+'px system-ui';ctx.fillStyle=color;ctx.textAlign=align;ctx.fillText(s,x,y)}
 function drawFork(p){
@@ -242,7 +242,28 @@ function update(){
 }
 function roster(){
   const el=document.getElementById('players');el.replaceChildren();
-  players.forEach((p,id)=>{const d=document.createElement('div');d.className='player';const name=document.createElement('span');name.textContent=id===me?'You · '+p.name:p.name;const status=document.createElement('span');status.className='pill';status.textContent=id===ownerId?'HOST':id===me?'YOU':'CONNECTED';d.append(name,status);el.append(d)});
+  players.forEach((p,id)=>{const d=document.createElement('div');d.className='player';const name=document.createElement('span');name.textContent=id===me?'You · '+p.name:p.name;const status=document.createElement('span');status.className='pill';status.textContent=id===ownerId?'PARTY LEADER':id===me?'YOU':'READY';d.append(name,status);el.append(d)});
+  updatePartyControls();
+}
+function updatePartyControls(){
+  const button=document.getElementById('enterArenaBtn');
+  const note=document.getElementById('partyLeaderNote');
+  if(!button||!note)return;
+  if(!roomCode){
+    button.disabled=false;
+    button.textContent='ENTER SOLO RUN';
+    note.textContent='You can jump in solo without a party.';
+  }else if(host){
+    button.textContent='INITIALIZE FORK';
+    button.disabled=players.size<2;
+    note.textContent=players.size<2
+      ?'The PARTY LEADER starts the run when at least 2 players are here.'
+      :'You are the PARTY LEADER. Initialize the arena when your crew is ready.';
+  }else{
+    button.textContent='WAITING FOR PARTY LEADER';
+    button.disabled=true;
+    note.textContent='Waiting for the PARTY LEADER to initialize the arena.';
+  }
 }
 function setSoloState(){
   me='solo';ownerId=null;host=false;roomCode='';remoteStates=Object.create(null);
@@ -259,6 +280,7 @@ function applyParty(m){
   if(!players.has(me))players.set(me,mePlayer);
   document.getElementById('partyCode').textContent=roomCode;document.getElementById('joinCode').value=roomCode;roster();
   setNetworkStatus('Party '+roomCode+' connected · '+players.size+' player(s)');
+  showScreen('partyLobby');
 }
 function handleServerMessage(m){
   if(!m||typeof m.type!=='string')return;
@@ -267,7 +289,11 @@ function handleServerMessage(m){
   if(m.type==='player_state'&&m.player&&m.player.id!==me){const p=m.player;remoteStates[p.id]=p;if(!players.has(p.id)){players.set(p.id,{...p,w:30,h:42,vx:0,vy:0,ground:false});roster()}return}
   if(m.type==='player_left'){players.delete(m.id);delete remoteStates[m.id];if(m.ownerId)ownerId=m.ownerId;host=ownerId===me;roster();setNetworkStatus(roomCode?'Party '+roomCode+' · '+players.size+' player(s)':'A party member left');return}
   if(m.type==='party_update'){ownerId=m.ownerId||ownerId;host=ownerId===me;roster();return}
-  if(m.type==='left_party'){setSoloState();setNetworkStatus(socketReady?'Connected to game service · create or join a party':'Reconnecting to game service…');return}
+  if(m.type==='party_started'){
+    if(m.code&&m.code===roomCode){ownerId=m.ownerId||ownerId;host=ownerId===me;setGameStatus('PARTY RUN INITIALIZED');showScreen('gameLayout');}
+    return;
+  }
+  if(m.type==='left_party'){setSoloState();setNetworkStatus(socketReady?'Connected to game service · create or join a party':'Reconnecting to game service…');showScreen('lobbyHome');return}
   if(m.type==='error')setNetworkStatus(m.message||'Party request failed.');
 }
 function connectSocket(){
@@ -278,7 +304,7 @@ function connectSocket(){
   current.addEventListener('open',()=>{if(socket!==current)return;socketReady=true;setNetworkStatus('Connected to game service · create or join a party')});
   current.addEventListener('message',event=>{if(socket!==current)return;try{handleServerMessage(JSON.parse(event.data))}catch{setNetworkStatus('Received an invalid message from the game service.')}});
   current.addEventListener('error',()=>{if(socket===current)setNetworkStatus('Could not reach the game service.')});
-  current.addEventListener('close',()=>{if(socket!==current)return;socket=null;socketReady=false;setSoloState();setNetworkStatus('Server connection lost · reconnecting…');if(reconnectTimer)window.clearTimeout(reconnectTimer);reconnectTimer=window.setTimeout(()=>{reconnectTimer=null;if(!socket&&!document.hidden)connectSocket()},1500)});
+  current.addEventListener('close',()=>{if(socket!==current)return;socket=null;socketReady=false;setSoloState();setNetworkStatus('Server connection lost · reconnecting…');showScreen('lobbyHome');if(reconnectTimer)window.clearTimeout(reconnectTimer);reconnectTimer=window.setTimeout(()=>{reconnectTimer=null;if(!socket&&!document.hidden)connectSocket()},1500)});
   return current;
 }
 function sendWhenReady(message){
@@ -327,6 +353,7 @@ window.addEventListener('blur',()=>{keys.left=false;keys.right=false});
 function bindHold(id,key){const b=document.getElementById(id),on=e=>{e.preventDefault();keys[key]=true},off=e=>{e.preventDefault();keys[key]=false};b.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(type=>b.addEventListener(type,off))}
 bindHold('leftBtn','left');bindHold('rightBtn','right');
 document.getElementById('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mePlayer.ground)mePlayer.vy=-12});
+document.getElementById('returnLobbyBtn').addEventListener('click',()=>showScreen(roomCode?'partyLobby':'lobbyHome'));
 
 
 connectSocket();render();update();
