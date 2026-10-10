@@ -52,50 +52,134 @@ button:focus-visible,input:focus-visible{outline:3px solid #ffd65a;outline-offse
 @media(max-width:520px){.lobby-hero{min-height:unset;padding:22px}.lobby-card{padding:18px}.fork-mascot{width:70px;height:70px;font-size:40px}.lobby-roster{grid-template-columns:1fr}.wrap{padding:10px}.top{gap:8px}.pill{font-size:10px}}
 @media(min-width:821px){.lobby-screen{grid-template-columns:minmax(0,1.1fr) minmax(330px,.9fr)}}
 
+
+/* Exploding-fork repo visual language: terminal green, bordered screens, compact nav */
+:root{--bg:#020b05;--panel:#06150b;--line:#1c6b38;--green:#39ff72;--dim:#7dca92;--text:#e0ffe8;color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+body{background:radial-gradient(circle at 50% -10%,#0a5c24 0,#063016 35%,#020b05 72%);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.wrap{max-width:980px}
+.terminal-header{position:sticky;top:0;z-index:25;display:flex;justify-content:space-between;align-items:center;gap:12px;margin:-18px -18px 24px;padding:18px clamp(18px,6vw,60px);border-bottom:1px solid var(--line);background:#020b05ee;backdrop-filter:blur(10px)}
+.terminal-header .logo{color:var(--green);font-weight:900;letter-spacing:3px;font-size:clamp(13px,2vw,17px)}
+.network-status{color:#77c98e;font-size:12px;overflow-wrap:anywhere}
+.screen{position:relative;z-index:2}
+.screen:not(.active){display:none!important;pointer-events:none}
+.screen.active{display:block!important;pointer-events:auto}
+#gameLayout.active{display:grid!important}
+.hero{border:1px solid var(--line);padding:clamp(20px,4vw,30px);background:linear-gradient(135deg,#0a130e,#07100b);box-shadow:0 0 45px #0a4d20}
+.hero h2{margin:0 0 8px;color:var(--green);font-size:clamp(32px,7vw,58px);line-height:.98;letter-spacing:-1px}
+.hero p{color:#bdebc9;max-width:760px}
+.dim,.small{color:var(--dim)}
+.sectionBlock,.terminal-panel{border:1px solid var(--line);background:#06150b;padding:clamp(15px,3vw,22px);box-shadow:0 12px 40px #0003}
+.rules{display:grid;gap:0;margin-top:10px}
+.rule{display:flex;gap:14px;align-items:flex-start;padding:14px 2px;border-bottom:1px solid #145326}
+.rule:last-child{border-bottom:0}
+.rule>span{font-size:21px;line-height:1.2}
+.rule b{display:block;color:var(--text);font-size:13px}
+.rule small{display:block;color:var(--dim);font-size:12px;line-height:1.5;margin-top:4px}
+button,input{font:inherit;touch-action:manipulation;position:relative;z-index:3}
+button{cursor:pointer;border:1px solid #35c963;background:#062611;color:var(--green);padding:10px 14px;border-radius:5px}
+button:hover{background:#0b3a1a}
+button:disabled{cursor:not-allowed;opacity:.45;filter:grayscale(.5)}
+button.primary{border-color:#39ff72;background:#073016;color:#bfffd0;font-weight:900}
+button.primary:hover{background:#0b3a1a}
+button.secondary{background:#031008;border-color:#1c6b38;color:#7dca92}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.actions button{flex:1 1 145px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px}
+.bar h2{margin:4px 0;color:var(--green);font-size:clamp(17px,3vw,24px);overflow-wrap:anywhere}
+.field{display:grid;gap:7px;margin:14px 0}
+.field label{font-size:12px;color:var(--dim);letter-spacing:1px}
+.field input{width:100%;background:#031008;border:1px solid var(--line);color:var(--text);padding:12px;margin:0;outline:none;border-radius:2px}
+.field input:focus{border-color:var(--green);box-shadow:0 0 0 2px #39ff7220}
+.flow-status{font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.code{font-size:clamp(30px,8vw,42px);letter-spacing:clamp(5px,2vw,9px);font-weight:900;color:var(--green);padding:12px 0;overflow-wrap:anywhere}
+.players{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.player{padding:8px 11px;border:1px solid var(--line);background:var(--panel);color:#bdebc9;font-size:12px;overflow-wrap:anywhere}
+.footer{margin-top:24px;color:#496553;text-align:center;font-size:11px;letter-spacing:1px}
+#partyCode{margin:0}
+#partyLobby .players:empty:after{content:"WAITING FOR CREW…";padding:12px;border:1px dashed var(--line);color:var(--dim);font-size:12px}
+#partyLobby #enterArenaBtn{width:100%;min-height:46px;margin-top:8px}
+#gameLayout{margin-top:0}
+#gameLayout .panel,#gameLayout .gamebox{border-color:var(--line);background:#06150b}
+#gameLayout .gamehead{border-color:var(--line)}
+#gameLayout .small-button{font-size:11px;padding:7px 10px;border-radius:3px}
+#gameLayout .touch{display:flex!important;visibility:visible!important}
+@media(max-width:560px){
+  .terminal-header{margin:-10px -10px 18px;padding:15px 12px;align-items:flex-start}
+  .terminal-header .logo{letter-spacing:1px}
+  .network-status{font-size:10px;text-align:right;max-width:48%}
+  .actions button{flex-basis:100%}
+  .bar{align-items:flex-start}
+  .bar .secondary{flex:0 0 auto;padding:8px 10px}
+}
+
 </style>
 </head>
 <body><main class="wrap">
-<header class="top"><div><div class="logo">🍴 FORK <span>PARK</span></div><div class="sub">QUANTUM CHAOS • CO-OP PLATFORM PARTY</div></div><div class="pill">BUILD 01 · BROWSER GAME</div></header>
+<header class="terminal-header">
+  <div class="logo">[ EXPLODING // FORK ]</div>
+  <div class="network-status" id="networkStatusTop" data-network-status>● CONNECTING TO NODE…</div>
+</header>
 
-<section class="lobby-screen" id="lobbyScreen" aria-label="Exploding Fork game lobby">
-  <section class="lobby-hero">
-    <div class="lobby-kicker">🔥 EXPLODING FORK UNIVERSE</div>
-    <h1 class="lobby-title">YOUR CREW.<br><span>YOUR CHAOS.</span></h1>
-    <p class="lobby-copy">Grab your forks, rally your friends, and jump into a co-op run through the quantum chaos. Make a party or join with a code.</p>
-    <div class="fork-duo" aria-label="Exploding Fork and Quantum Fork characters">
-      <div><div class="fork-mascot">🍴💥</div><div class="mascot-label">EXPLODING FORK</div></div>
-      <div><div class="fork-mascot quantum">🍴⚡</div><div class="mascot-label">QUANTUM FORK</div></div>
+<section id="lobbyHome" class="screen active">
+  <div class="hero">
+    <div class="dim">// PRIVATE CREW NETWORK</div>
+    <h2>EXPLODING<br><span>FORK</span><br>NODE.</h2>
+    <p>A co-op platform run through quantum chaos. Build a crew, dodge the gaps, chain your jumps, and make it to the portal together.</p>
+    <div class="actions">
+      <button class="primary" id="navCreateBtn">+ CREATE PARTY</button>
+      <button class="secondary" id="navJoinBtn">+ JOIN PARTY</button>
+      <button class="secondary" id="soloRunBtn">+ SOLO RUN</button>
     </div>
-  </section>
-  <section class="lobby-card">
-    <div>
-      <div class="lobby-kicker">PARTY LOBBY</div>
-      <h2 style="margin-top:12px">Get the crew together</h2>
-      <p class="lobby-small" style="margin-top:6px">Up to 8 players · One code · Team up to reach the portal.</p>
+  </div>
+  <div class="sectionBlock" style="margin-top:18px">
+    <div class="dim">// FORK SIMULATION</div>
+    <div class="rules">
+      <div class="rule"><span>⚡</span><div><b>Cross the quantum gaps</b><small>Jump between neon platforms and don't fall behind your crew.</small></div></div>
+      <div class="rule"><span>👥</span><div><b>Bring your crew</b><small>Create a room, share the code, and see your friends in real time.</small></div></div>
+      <div class="rule"><span>◉</span><div><b>Reach the portal</b><small>Regroup at the exit and clear the level together.</small></div></div>
     </div>
-    <button id="hostBtn" class="lobby-action">＋ CREATE A PARTY</button>
-    <div class="lobby-divider"></div>
-    <div>
-      <p class="lobby-small" style="margin-bottom:8px">YOUR PARTY CODE</p>
-      <div class="partycode" id="partyCode">------</div>
-    </div>
-    <div class="partyrow"><input id="joinCode" maxlength="6" autocapitalize="characters" autocomplete="off" placeholder="ENTER 6-CHAR CODE" aria-label="Party code"><button id="joinBtn">JOIN</button></div>
-    <p class="lobby-status" id="netStatus" aria-live="polite">Connecting to the game service…</p>
-    <div class="lobby-divider"></div>
-    <div>
-      <h2 style="font-size:16px;margin-bottom:9px">Party roster <span style="color:#ff7046">/</span> <span class="lobby-small">waiting for your crew</span></h2>
-      <div id="players" class="players lobby-roster"><div class="player"><span>You · Exploding Fork</span><span class="pill">YOU</span></div></div>
-    </div>
-    <button id="enterArenaBtn" class="lobby-action lobby-enter">ENTER THE ARENA ↗</button>
-    <p class="lobby-small">You can enter solo, too. Share your code so friends can join.</p>
-  </section>
+  </div>
+  <div class="footer">EXPLODING FORK // QUANTUM CO-OP PLATFORM SIMULATOR</div>
 </section>
 
-<div class="layout" id="gameLayout"><section class="gamebox"><div class="gamehead"><div class="gamehead-left"><strong id="levelLabel">LEVEL 01 — THE SPLIT</strong><button id="returnLobbyBtn" class="small-button">← LOBBY</button></div><span class="status" id="gameStatus">READY TO PLAY</span></div><canvas id="game" width="960" height="540" aria-label="Fork Park platform game"></canvas>
+<section id="createScreen" class="screen">
+  <div class="panel terminal-panel">
+    <div class="bar"><div><h2>// CREATE EXPLODING PARTY</h2><div class="small">Initialize a room and invite your crew.</div></div><button class="secondary" id="backHomeFromCreate">Back</button></div>
+    <div class="field"><label for="createName">YOUR FORK NAME</label><input id="createName" maxlength="20" autocomplete="nickname" placeholder="Forkmaster"></div>
+    <button class="primary" id="hostBtn">+ CREATE PARTY</button>
+    <p class="small flow-status" data-network-status aria-live="polite">Waiting for your command…</p>
+  </div>
+</section>
+
+<section id="joinScreen" class="screen">
+  <div class="panel terminal-panel">
+    <div class="bar"><div><h2>// JOIN EXPLODING PARTY</h2><div class="small">Enter the code your crew shared.</div></div><button class="secondary" id="backHomeFromJoin">Back</button></div>
+    <div class="field"><label for="joinName">YOUR FORK NAME</label><input id="joinName" maxlength="20" autocomplete="nickname" placeholder="Quantum buddy"></div>
+    <div class="field"><label for="joinCode">6-CHARACTER PARTY CODE</label><input id="joinCode" maxlength="6" autocapitalize="characters" autocomplete="off" placeholder="ABC234" style="text-transform:uppercase"></div>
+    <button class="primary" id="joinBtn">+ JOIN PARTY</button>
+    <p class="small flow-status" data-network-status aria-live="polite">Ready to connect…</p>
+  </div>
+</section>
+
+<section id="partyLobby" class="screen">
+  <div class="panel terminal-panel">
+    <div class="bar"><div><h2>// EXPLODING LOBBY</h2><div class="small">Broadcast this code to your crew.</div></div><button class="secondary" id="leavePartyBtn">Leave</button></div>
+    <div class="dim">// YOUR PARTY CODE</div>
+    <div class="code" id="partyCode">------</div>
+    <div class="small">Invite your friends to join the same room.</div>
+    <div class="bar" style="margin-top:18px"><div><h2 style="font-size:18px">// CREW ROSTER</h2><div class="small">Players connected to this lobby.</div></div><span class="small">MAX 8</span></div>
+    <div class="players" id="players"><span class="player">You · Exploding Fork</span></div>
+    <p class="network-status flow-status" id="netStatus" data-network-status aria-live="polite">Connecting to Fork Park service…</p>
+    <button class="primary" id="enterArenaBtn" disabled>INITIALIZE FORK</button>
+    <div class="small" id="partyLeaderNote" style="margin-top:12px">Waiting for the crew to arrive.</div>
+  </div>
+</section>
+
+<div class="layout screen" id="gameLayout"><section class="gamebox"><div class="gamehead"><div class="gamehead-left"><strong id="levelLabel">LEVEL 01 — THE SPLIT</strong><button id="returnLobbyBtn" class="small-button">← LOBBY</button></div><span class="status" id="gameStatus">READY TO PLAY</span></div><canvas id="game" width="960" height="540" aria-label="Fork Park platform game"></canvas>
 <div class="touch"><div class="move"><button id="leftBtn" aria-label="Move left">◀</button><button id="rightBtn" aria-label="Move right">▶</button></div><button class="jump" id="jumpBtn">JUMP ↟</button></div>
 </section><aside class="side">
 <section class="panel"><h3>🎮 Controls</h3><p><b>Move:</b> A / D or ← / →</p><p><b>Jump:</b> W, ↑, or Space</p><p><b>Mobile:</b> left and right buttons on the left; jump on the right.</p><p><b>Fork powers:</b> stand on the cyan quantum pads and use teamwork to cross the gaps.</p></section></aside></div>
-<div class="bottom">EXPLODING FORK × QUANTUM FORK · Team up and escape the quantum chaos.</div>
+<div class="bottom">EXPLODING FORK // KEEP YOUR CREW TOGETHER.</div>
 </main>
 <script>
 (() => {
@@ -202,8 +286,41 @@ function sendWhenReady(message){
   const sendMessage=()=>{if(socket!==current||current.readyState!==WebSocket.OPEN)return;try{current.send(JSON.stringify(message))}catch{setNetworkStatus('Could not send party request. Try again.')}};
   if(current.readyState===WebSocket.OPEN)sendMessage();else current.addEventListener('open',sendMessage,{once:true});
 }
-document.getElementById('hostBtn').addEventListener('click',()=>{setNetworkStatus('Creating party…');sendWhenReady({type:'create_party'})});
-document.getElementById('joinBtn').addEventListener('click',()=>{const code=document.getElementById('joinCode').value.trim().toUpperCase();if(!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/.test(code)){setNetworkStatus('Enter the six-character party code.');return}setNetworkStatus('Joining party '+code+'…');sendWhenReady({type:'join_party',code})});
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(screen=>screen.classList.toggle('active',screen.id===id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('navCreateBtn').addEventListener('click',()=>showScreen('createScreen'));
+document.getElementById('navJoinBtn').addEventListener('click',()=>showScreen('joinScreen'));
+document.getElementById('backHomeFromCreate').addEventListener('click',()=>showScreen('lobbyHome'));
+document.getElementById('backHomeFromJoin').addEventListener('click',()=>showScreen('lobbyHome'));
+document.getElementById('soloRunBtn').addEventListener('click',()=>{setSoloState();setNetworkStatus('SOLO RUN // PARTY NOT CONNECTED');showScreen('gameLayout')});
+document.getElementById('hostBtn').addEventListener('click',()=>{
+  const name=document.getElementById('createName').value.trim()||'Forkmaster';
+  setNetworkStatus('Creating your party…');
+  sendWhenReady({type:'create_party',name});
+});
+document.getElementById('joinBtn').addEventListener('click',()=>{
+  const code=document.getElementById('joinCode').value.trim().toUpperCase();
+  if(!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/.test(code)){setNetworkStatus('Enter a valid six-character party code.');return}
+  const name=document.getElementById('joinName').value.trim()||'Quantum buddy';
+  setNetworkStatus('Joining party '+code+'…');
+  sendWhenReady({type:'join_party',code,name});
+});
+document.getElementById('enterArenaBtn').addEventListener('click',()=>{
+  if(!roomCode){showScreen('gameLayout');return}
+  if(!host){setNetworkStatus('Waiting for the PARTY LEADER to initialize the arena.');return}
+  if(players.size<2){setNetworkStatus('Invite at least one crew member before launching.');return}
+  setNetworkStatus('Initializing the arena for your crew…');
+  sendWhenReady({type:'start_party'});
+});
+document.getElementById('leavePartyBtn').addEventListener('click',()=>{
+  if(socket&&socket.readyState===WebSocket.OPEN&&roomCode){sendWhenReady({type:'leave_party'});return}
+  setSoloState();setNetworkStatus('Returned to the home screen.');showScreen('lobbyHome');
+});
+document.getElementById('joinCode').addEventListener('input',event=>{
+  event.target.value=event.target.value.toUpperCase().replace(/[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/g,'').slice(0,6);
+});
 window.addEventListener('keydown',e=>{if(e.target instanceof HTMLElement&&e.target.matches('input,textarea,select'))return;if(['ArrowLeft','ArrowRight','ArrowUp',' '].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=true;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=true;if((e.key==='ArrowUp'||e.key.toLowerCase()==='w'||e.key===' ')&&mePlayer.ground)mePlayer.vy=-12});
 window.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=false;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=false});
 window.addEventListener('blur',()=>{keys.left=false;keys.right=false});
@@ -211,19 +328,6 @@ function bindHold(id,key){const b=document.getElementById(id),on=e=>{e.preventDe
 bindHold('leftBtn','left');bindHold('rightBtn','right');
 document.getElementById('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mePlayer.ground)mePlayer.vy=-12});
 
-document.getElementById('enterArenaBtn').addEventListener('click',()=>{
-  document.getElementById('lobbyScreen').style.display='none';
-  document.getElementById('gameLayout').style.display='grid';
-  window.scrollTo({top:0,behavior:'smooth'});
-});
-document.getElementById('returnLobbyBtn').addEventListener('click',()=>{
-  document.getElementById('gameLayout').style.display='none';
-  document.getElementById('lobbyScreen').style.display='grid';
-  window.scrollTo({top:0,behavior:'smooth'});
-});
-document.getElementById('joinCode').addEventListener('input',event=>{
-  event.target.value=event.target.value.toUpperCase().replace(/[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/g,'').slice(0,6);
-});
 
 connectSocket();render();update();
 })();
