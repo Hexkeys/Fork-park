@@ -112,6 +112,15 @@ button.secondary{background:#031008;border-color:#1c6b38;color:#7dca92}
   .bar .secondary{flex:0 0 auto;padding:8px 10px}
 }
 
+
+/* Levels, puzzle HUD, and responsive extra buttons */
+.level-toolbar{display:flex;flex-wrap:wrap;gap:7px;padding:10px;background:#031008;border-top:1px solid var(--line)}
+.level-toolbar button{flex:1 1 120px;font-size:11px;min-height:40px;padding:8px}
+.level-toolbar #actionBtn{border-color:#ffd166;color:#ffe3a1}
+.puzzle-hud{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:12px 14px;background:#04140a;border-top:1px dashed #1c6b38;font-size:11px;line-height:1.55}
+#shardCounter{color:var(--green);white-space:nowrap;font-weight:900}
+#puzzleHint{color:#a9dcb7;overflow-wrap:anywhere}
+@media(max-width:560px){.level-toolbar button{flex:1 1 28%;min-width:90px}.puzzle-hud{grid-template-columns:1fr;gap:4px}}
 </style>
 </head>
 <body><main class="wrap">
@@ -177,8 +186,17 @@ button.secondary{background:#031008;border-color:#1c6b38;color:#7dca92}
 
 <div class="layout screen" id="gameLayout"><section class="gamebox"><div class="gamehead"><div class="gamehead-left"><strong id="levelLabel">LEVEL 01 — THE SPLIT</strong><button id="returnLobbyBtn" class="small-button">← LOBBY</button></div><span class="status" id="gameStatus">READY TO PLAY</span></div><canvas id="game" width="960" height="540" aria-label="Fork Park platform game"></canvas>
 <div class="touch"><div class="move"><button id="leftBtn" aria-label="Move left">◀</button><button id="rightBtn" aria-label="Move right">▶</button></div><button class="jump" id="jumpBtn">JUMP ↟</button></div>
+<div class="level-toolbar" role="group" aria-label="Level and puzzle controls">
+  <button class="secondary" id="prevLevelBtn" aria-label="Previous level">◀ PREV</button>
+  <button class="secondary" id="restartLevelBtn" aria-label="Restart current level">↻ RESTART</button>
+  <button class="secondary" id="nextLevelBtn" aria-label="Next level">NEXT ▶</button>
+  <button class="secondary" id="randomLevelBtn" aria-label="Generate a random level">⚄ RANDOM</button>
+  <button class="secondary" id="hintBtn" aria-label="Show a puzzle hint">? HINT</button>
+  <button id="actionBtn" aria-label="Interact with a switch or use a quantum pulse">⚡ PULSE / E</button>
+</div>
+<div class="puzzle-hud" aria-live="polite"><b id="shardCounter">SHARDS 0 / 3</b><span id="puzzleHint">Collect the glowing shards, activate circuit switches, and reach the portal.</span></div>
 </section><aside class="side">
-<section class="panel"><h3>🎮 Controls</h3><p><b>Move:</b> A / D or ← / →</p><p><b>Jump:</b> W, ↑, or Space</p><p><b>Mobile:</b> left and right buttons on the left; jump on the right.</p><p><b>Fork powers:</b> stand on the cyan quantum pads and use teamwork to cross the gaps.</p></section></aside></div>
+<section class="panel"><h3>🎮 Controls</h3><p><b>Move:</b> A / D or ← / →</p><p><b>Jump:</b> W, ↑, or Space</p><p><b>Interact / pulse:</b> E or the gold button. Stand near a circuit switch to open its bridge.</p><p><b>Level buttons:</b> PREV / NEXT switch designed stages; RANDOM builds a seeded layout. In parties, the leader chooses the level.</p><p><b>Puzzles:</b> collect all 3 fork shards, activate any switch, then get every crew member through the portal.</p><p><b>Mobile:</b> movement, jump, and puzzle/action buttons remain visible.</p></section></aside></div>
 <div class="bottom">EXPLODING FORK // KEEP YOUR CREW TOGETHER.</div>
 </main>
 <script>
@@ -194,13 +212,135 @@ const W=960,H=540,keys={left:false,right:false},players=new Map();
 const colors=['#39ff72','#bfff4f','#ff8e3c','#8fe6ac','#e4ffd0'];
 let me='solo',socket=null,socketReady=false,host=false,ownerId=null,roomCode='';
 let remoteStates=Object.create(null),lastSend=0,won=false,reconnectTimer=null;
-const world={gravity:.62,friction:.82,goal:{x:875,y:385,w:42,h:70},platforms:[
+let currentLevel=0,currentSeed=0;
+const levelTemplates=[
+{name:'THE SPLIT',goal:{x:875,y:385,w:42,h:70},platforms:[
 {x:0,y:470,w:245,h:70,type:'solid'},{x:300,y:425,w:145,h:22,type:'quantum'},
 {x:495,y:375,w:125,h:22,type:'solid'},{x:665,y:430,w:115,h:22,type:'quantum'},
 {x:820,y:455,w:140,h:85,type:'solid'},{x:115,y:350,w:85,h:16,type:'solid'},
-{x:535,y:270,w:95,h:16,type:'quantum'}]};
+{x:535,y:270,w:95,h:16,type:'quantum'}],shards:[{x:350,y:395},{x:565,y:345},{x:710,y:400}],switches:[]},
+{name:'NEON STEPS',goal:{x:875,y:385,w:42,h:70},platforms:[
+{x:0,y:470,w:205,h:70,type:'solid'},{x:230,y:420,w:110,h:18,type:'quantum'},
+{x:370,y:370,w:105,h:18,type:'solid'},{x:510,y:415,w:105,h:18,type:'quantum'},
+{x:645,y:350,w:110,h:18,type:'solid'},{x:810,y:455,w:150,h:85,type:'solid'}],
+shards:[{x:270,y:390},{x:410,y:340},{x:690,y:320}],switches:[]},
+{name:'SWITCHBACK',goal:{x:875,y:385,w:42,h:70},platforms:[
+{x:0,y:470,w:190,h:70,type:'solid'},{x:215,y:420,w:100,h:18,type:'quantum'},
+{x:350,y:380,w:120,h:18,type:'solid'},{x:495,y:420,w:95,h:18,type:'quantum'},
+{x:610,y:365,w:100,h:16,type:'gate'},{x:760,y:440,w:200,h:100,type:'solid'}],
+shards:[{x:255,y:390},{x:390,y:350},{x:800,y:410}],switches:[{x:420,y:350,label:'BRIDGE SWITCH'}]},
+{name:'CRATE LAB',goal:{x:875,y:385,w:42,h:70},platforms:[
+{x:0,y:470,w:210,h:70,type:'solid'},{x:245,y:400,w:90,h:18,type:'solid'},
+{x:365,y:445,w:105,h:18,type:'quantum'},{x:500,y:370,w:105,h:18,type:'solid'},
+{x:640,y:420,w:95,h:18,type:'gate'},{x:790,y:455,w:170,h:85,type:'solid'},
+{x:415,y:285,w:100,h:16,type:'quantum'}],
+shards:[{x:275,y:370},{x:450,y:255},{x:680,y:390}],switches:[{x:545,y:340,label:'LAB SWITCH'}]},
+{name:'ORBITAL FORK',goal:{x:875,y:385,w:42,h:70},platforms:[
+{x:0,y:470,w:200,h:70,type:'solid'},{x:220,y:430,w:100,h:18,type:'quantum'},
+{x:345,y:360,w:95,h:18,type:'quantum'},{x:465,y:310,w:115,h:18,type:'solid'},
+{x:600,y:375,w:95,h:18,type:'quantum'},{x:715,y:420,w:90,h:18,type:'solid'},
+{x:825,y:455,w:135,h:85,type:'solid'}],
+shards:[{x:260,y:400},{x:510,y:280},{x:755,y:390}],switches:[]},
+{name:'FINAL PROTOCOL',goal:{x:875,y:385,w:42,h:70},platforms:[
+{x:0,y:470,w:190,h:70,type:'solid'},{x:215,y:425,w:100,h:18,type:'quantum'},
+{x:345,y:360,w:95,h:18,type:'solid'},{x:470,y:410,w:95,h:18,type:'quantum'},
+{x:585,y:345,w:100,h:16,type:'gate'},{x:710,y:390,w:100,h:18,type:'solid'},
+{x:830,y:455,w:130,h:85,type:'solid'}],
+shards:[{x:255,y:395},{x:390,y:330},{x:745,y:360}],switches:[{x:515,y:380,label:'FINAL SWITCH'}]}
+];
+const world={gravity:.62,friction:.82,goal:{x:875,y:385,w:42,h:70},platforms:[],shards:[],switches:[],gateOpen:false};
 const mePlayer={id:me,name:'Exploding Fork',x:65,y:410,vx:0,vy:0,w:30,h:42,color:colors[1],ground:false};
 players.set(me,mePlayer);
+
+function randomLevelData(seed){
+  let state=(seed>>>0)||1;
+  const rand=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296};
+  const platforms=[{x:0,y:470,w:190,h:70,type:'solid'}];
+  let y=420;
+  for(let i=0;i<6;i++){
+    y=Math.round(Math.max(350,Math.min(440,y+(rand()-.5)*100)));
+    platforms.push({x:200+i*103+Math.floor(rand()*17),y,w:86+Math.floor(rand()*24),h:16+Math.floor(rand()*5),type:'quantum'});
+  }
+  platforms.push({x:835,y:455,w:125,h:85,type:'solid'});
+  const needsSwitch=rand()>.45;
+  if(needsSwitch)platforms[4].type='gate';
+  const shards=[1,3,5].map((idx)=>({x:platforms[idx].x+platforms[idx].w/2,y:platforms[idx].y-25}));
+  const switches=needsSwitch?[{x:platforms[3].x+platforms[3].w/2,y:platforms[3].y-30,label:'RANDOM CIRCUIT'}]:[];
+  return {name:'RANDOM PROTOCOL',goal:{x:875,y:385,w:42,h:70},platforms,shards,switches};
+}
+function updateLevelUi(){
+  const label=document.getElementById('levelLabel');
+  if(label)label.textContent=currentLevel===6?'RANDOM // SEED '+String(currentSeed).padStart(10,'0'):'LEVEL '+String(currentLevel+1).padStart(2,'0')+' — '+levelTemplates[currentLevel].name;
+  const hint=document.getElementById('puzzleHint');
+  const count=document.getElementById('shardCounter');
+  if(count)count.textContent='SHARDS '+world.shards.filter(s=>s.collected).length+' / '+world.shards.length;
+  if(hint){
+    const left=world.shards.filter(s=>!s.collected).length;
+    hint.textContent=left?'PUZZLE: collect '+left+' remaining glowing shard(s).':
+      (world.switches.some(s=>!s.active)?'PUZZLE: stand near the circuit switch and press E / PULSE.':'PUZZLE COMPLETE: regroup at the portal.');
+  }
+  updateLevelControls();
+}
+function updateLevelControls(){
+  const locked=Boolean(roomCode)&&!host;
+  ['prevLevelBtn','nextLevelBtn','randomLevelBtn','restartLevelBtn'].forEach(id=>{
+    const btn=document.getElementById(id);if(btn)btn.disabled=locked;
+  });
+}
+function loadLevel(index,seed){
+  currentLevel=index===6?6:Math.max(0,Math.min(levelTemplates.length-1,index|0));
+  currentSeed=(seed>>>0)||0;
+  const spec=currentLevel===6?randomLevelData(currentSeed):levelTemplates[currentLevel];
+  world.goal={...spec.goal};
+  world.platforms=spec.platforms.map(p=>({...p}));
+  world.shards=spec.shards.map(s=>({...s,collected:false}));
+  world.switches=spec.switches.map(s=>({...s,active:false}));
+  world.gateOpen=world.switches.length===0;
+  won=false;keys.left=false;keys.right=false;
+  mePlayer.x=65;mePlayer.y=410;mePlayer.vx=0;mePlayer.vy=0;mePlayer.ground=false;
+  let spawn=0;
+  players.forEach((p,id)=>{
+    if(id===me)return;
+    p.x=Math.min(110+spawn*38,250);p.y=410;p.vx=0;p.vy=0;p.ground=false;
+    if(remoteStates[id]){remoteStates[id].x=p.x;remoteStates[id].y=p.y}
+    spawn++;
+  });
+  setGameStatus('LEVEL READY // COLLECT SHARDS');
+  updateLevelUi();
+}
+function requestLevel(index,seed){
+  if(roomCode){
+    if(!host){setGameStatus('ONLY THE PARTY LEADER CAN CHANGE LEVELS');return}
+    sendWhenReady({type:'set_level',level:index,seed:seed>>>0});
+    return;
+  }
+  loadLevel(index,seed);
+}
+function restartCurrentLevel(){requestLevel(currentLevel,currentSeed)}
+function showPuzzleHint(){
+  const hint=document.getElementById('puzzleHint');
+  const left=world.shards.filter(s=>!s.collected).length;
+  if(left){hint.textContent='HINT: look for '+left+' glowing green shard(s) on the platforms before entering the portal.';return}
+  const switchObj=world.switches.find(s=>!s.active);
+  if(switchObj){hint.textContent='HINT: move close to the '+switchObj.label+' and press E or ⚡ PULSE to open the bridge.';return}
+  hint.textContent='HINT: the puzzle is solved. Lead your whole crew into the glowing portal.';
+}
+function activateSwitch(){
+  const p=mePlayer,near=world.switches.find(s=>!s.active&&Math.hypot((p.x+p.w/2)-s.x,(p.y+p.h/2)-s.y)<92);
+  if(near){
+    near.active=true;world.gateOpen=true;setGameStatus('CIRCUIT OPEN // BRIDGE ENABLED');updateLevelUi();
+    if(roomCode)sendWhenReady({type:'puzzle_action'});
+    return;
+  }
+  if(world.switches.some(s=>!s.active)){
+    setGameStatus('MOVE CLOSER TO THE SWITCH');
+    return;
+  }
+  const direction=keys.left?-1:1;
+  p.vx+=direction*3.2;
+  setGameStatus('QUANTUM PULSE!');
+}
+
 function setNetworkStatus(message){document.querySelectorAll('[data-network-status]').forEach(el=>{el.textContent=message})}
 function setGameStatus(message){document.getElementById('gameStatus').textContent=message}
 function text(s,x,y,size=16,color='#f4f7ff',align='left'){ctx.font='700 '+size+'px system-ui';ctx.fillStyle=color;ctx.textAlign=align;ctx.fillText(s,x,y)}
@@ -221,22 +361,43 @@ function render(){
   ctx.strokeStyle='#39ff7214';ctx.lineWidth=1;
   for(let x=0;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
   for(let y=0;y<H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
-  world.platforms.forEach(p=>{const q=p.type==='quantum';ctx.fillStyle=q?'#0b2c16':'#14211a';ctx.strokeStyle=q?'#39ff72':'#285535';ctx.lineWidth=2;ctx.shadowColor=q?'#39ff72':'transparent';ctx.shadowBlur=q?15:0;ctx.beginPath();ctx.roundRect(p.x,p.y,p.w,p.h,6);ctx.fill();ctx.stroke();ctx.shadowBlur=0;if(q){ctx.fillStyle='#39ff72';ctx.fillRect(p.x+10,p.y+4,Math.max(0,p.w-20),2)}});
+  world.platforms.forEach(p=>{
+    if(p.type==='gate'&&!world.gateOpen){ctx.fillStyle='#32191a';ctx.strokeStyle='#ff8e3c';ctx.shadowColor='#ff8e3c';}
+    else{const q=p.type==='quantum';ctx.fillStyle=q?'#0b2c16':'#14211a';ctx.strokeStyle=q?'#39ff72':'#285535';ctx.shadowColor=q?'#39ff72':'transparent'}
+    ctx.lineWidth=2;ctx.shadowBlur=p.type==='gate'&&!world.gateOpen?12:(p.type==='quantum'?15:0);
+    ctx.beginPath();ctx.roundRect(p.x,p.y,p.w,p.h,6);ctx.fill();ctx.stroke();ctx.shadowBlur=0;
+    if(p.type==='gate'&&!world.gateOpen){ctx.strokeStyle='#ff8e3c';ctx.beginPath();for(let x=p.x+8;x<p.x+p.w;x+=18){ctx.moveTo(x,p.y+2);ctx.lineTo(x,p.y+p.h-2)}ctx.stroke()}
+    else if(p.type==='quantum'){ctx.fillStyle='#39ff72';ctx.fillRect(p.x+10,p.y+4,Math.max(0,p.w-20),2)}
+  });
+  world.shards.forEach(s=>{if(s.collected)return;ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Math.PI/4);ctx.fillStyle='#bfff4f';ctx.shadowColor='#39ff72';ctx.shadowBlur=16;ctx.fillRect(-7,-7,14,14);ctx.restore()});
+  world.switches.forEach(s=>{ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,13,0,Math.PI*2);ctx.fillStyle=s.active?'#39ff72':'#ff8e3c';ctx.shadowColor=s.active?'#39ff72':'#ff8e3c';ctx.shadowBlur=17;ctx.fill();ctx.shadowBlur=0;text(s.active?'ON':'E',s.x,s.y+4,10,'#020b05','center');ctx.restore()});
   const g=world.goal;ctx.save();ctx.shadowColor='#39ff72';ctx.shadowBlur=25;ctx.strokeStyle='#39ff72';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(g.x+g.w/2,g.y+g.h/2,g.w/2,g.h/2,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#39ff7220';ctx.fill();ctx.restore();text('EXIT',g.x+g.w/2,g.y-8,12,'#39ff72','center');
   players.forEach(drawFork);
-  if(won){ctx.fillStyle='#070b1dcc';ctx.fillRect(0,0,W,H);text('FORK CREW SYNC!',W/2,220,42,'#39ff72','center');text('Everyone made it to the portal!',W/2,265,20,'#f4f7ff','center');text('Get ready to go again.',W/2,305,15,'#a8b7dc','center')}
+  if(won){ctx.fillStyle='#020b05dd';ctx.fillRect(0,0,W,H);text('LEVEL CLEARED!',W/2,220,42,'#39ff72','center');text('Puzzle solved. Crew synchronized.',W/2,265,20,'#e0ffe8','center');text('Use NEXT LEVEL to continue.',W/2,305,15,'#bdebc9','center')}
   requestAnimationFrame(render);
 }
-function collide(p){p.ground=false;for(const b of world.platforms){if(p.vy>=0&&p.x+p.w>b.x&&p.x<b.x+b.w&&p.y+p.h>=b.y&&p.y+p.h-p.vy<=b.y){p.y=b.y-p.h;p.vy=0;p.ground=true}}}
+function collide(p){p.ground=false;for(const b of world.platforms){if(b.type==='gate'&&!world.gateOpen)continue;if(p.vy>=0&&p.x+p.w>b.x&&p.x<b.x+b.w&&p.y+p.h>=b.y&&p.y+p.h-p.vy<=b.y){p.y=b.y-p.h;p.vy=0;p.ground=true}}}
 function atPortal(p){const g=world.goal;return p.x+p.w>g.x&&p.x<g.x+g.w&&p.y+p.h>g.y&&p.y<g.y+g.h}
 function update(){
   const p=mePlayer,ax=(keys.right?1:0)-(keys.left?1:0);p.vx+=ax*.7;p.vx=Math.max(-5.2,Math.min(5.2,p.vx));if(!ax)p.vx*=world.friction;
   p.x+=p.vx;p.vy=Math.min(12,p.vy+world.gravity);p.y+=p.vy;collide(p);p.x=Math.max(0,Math.min(W-p.w,p.x));
   if(p.y>H+80){p.x=65;p.y=400;p.vx=0;p.vy=0}
   for(const [id,r] of Object.entries(remoteStates)){const q=players.get(id);if(q){q.x=r.x;q.y=r.y;q.name=r.name||q.name||'Fork buddy';q.color=r.color||q.color}}
+  for(const shard of world.shards){
+    if(shard.collected)continue;
+    for(const player of players.values()){
+      if(Math.hypot((player.x+player.w/2)-shard.x,(player.y+player.h/2)-shard.y)<26){shard.collected=true;updateLevelUi();break}
+    }
+  }
   const at=atPortal(p),teamReady=[...players.values()].every(atPortal);
-  if(at&&!teamReady&&!won)setGameStatus('WAITING FOR PARTY…');else if(!at&&!won)setGameStatus('READY TO PLAY');
-  if(at&&teamReady&&!won){won=true;setGameStatus('PARTY PORTAL CLEARED!');window.setTimeout(()=>{won=false;p.x=65;p.y=400;p.vx=0;p.vy=0;setGameStatus('READY TO PLAY')},2600)}
+  const shardsReady=world.shards.every(s=>s.collected),switchesReady=world.switches.every(s=>s.active);
+  if(!won){
+    if(!shardsReady)setGameStatus(at?'PORTAL LOCKED // FIND SHARDS':'COLLECT FORK SHARDS');
+    else if(!switchesReady)setGameStatus('FIND SWITCH // PRESS E / PULSE');
+    else if(at&&!teamReady)setGameStatus('WAITING FOR PARTY…');
+    else if(at&&teamReady){won=true;setGameStatus('LEVEL CLEARED!')}
+    else setGameStatus('REACH THE PORTAL');
+  }
   if(socket&&socket.readyState===WebSocket.OPEN&&roomCode&&Date.now()-lastSend>50){try{socket.send(JSON.stringify({type:'state',x:p.x,y:p.y}));lastSend=Date.now()}catch{setNetworkStatus('Movement sync interrupted. Reconnecting…')}}
   requestAnimationFrame(update);
 }
@@ -290,7 +451,15 @@ function handleServerMessage(m){
   if(m.type==='player_left'){players.delete(m.id);delete remoteStates[m.id];if(m.ownerId)ownerId=m.ownerId;host=ownerId===me;roster();setNetworkStatus(roomCode?'Party '+roomCode+' · '+players.size+' player(s)':'A party member left');return}
   if(m.type==='party_update'){ownerId=m.ownerId||ownerId;host=ownerId===me;roster();return}
   if(m.type==='party_started'){
-    if(m.code&&m.code===roomCode){ownerId=m.ownerId||ownerId;host=ownerId===me;setGameStatus('PARTY RUN INITIALIZED');showScreen('gameLayout');}
+    if(m.code&&m.code===roomCode){ownerId=m.ownerId||ownerId;host=ownerId===me;loadLevel(Number.isInteger(m.level)?m.level:0,Number.isInteger(m.seed)?m.seed:0);setGameStatus('PARTY RUN INITIALIZED');showScreen('gameLayout');}
+    return;
+  }
+  if(m.type==='level_changed'){
+    if(m.code&&m.code===roomCode){loadLevel(Number.isInteger(m.level)?m.level:0,Number.isInteger(m.seed)?m.seed:0);setGameStatus('LEVEL SYNCHRONIZED BY PARTY LEADER')}
+    return;
+  }
+  if(m.type==='puzzle_action'){
+    if(m.code&&m.code===roomCode)applyPuzzleAction();
     return;
   }
   if(m.type==='left_party'){setSoloState();setNetworkStatus(socketReady?'Connected to game service · create or join a party':'Reconnecting to game service…');showScreen('lobbyHome');return}
@@ -354,7 +523,14 @@ function bindHold(id,key){const b=document.getElementById(id),on=e=>{e.preventDe
 bindHold('leftBtn','left');bindHold('rightBtn','right');
 document.getElementById('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mePlayer.ground)mePlayer.vy=-12});
 document.getElementById('returnLobbyBtn').addEventListener('click',()=>showScreen(roomCode?'partyLobby':'lobbyHome'));
-
+document.getElementById('prevLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?5:(currentLevel+levelTemplates.length-1)%levelTemplates.length,0));
+document.getElementById('nextLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?0:(currentLevel+1)%levelTemplates.length,0));
+document.getElementById('randomLevelBtn').addEventListener('click',()=>requestLevel(6,(Math.random()*0xffffffff)>>>0));
+document.getElementById('restartLevelBtn').addEventListener('click',restartCurrentLevel);
+document.getElementById('hintBtn').addEventListener('click',showPuzzleHint);
+document.getElementById('actionBtn').addEventListener('click',activateSwitch);
+window.addEventListener('keydown',e=>{if(e.target instanceof HTMLElement&&e.target.matches('input,textarea,select'))return;if(e.key.toLowerCase()==='e'&&!e.repeat)activateSwitch()});
+loadLevel(0,0);
 
 connectSocket();render();update();
 })();
