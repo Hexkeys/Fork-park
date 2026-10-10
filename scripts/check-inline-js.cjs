@@ -17,7 +17,9 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
 const checks = [
   ['canvas game', html.includes('<canvas id="game"')],
-  ['Exploding Fork lobby first screen', html.includes('id="lobbyScreen"') && html.includes('YOUR CREW.')],
+  ['Exploding Fork terminal home screen', html.includes('id="lobbyHome"') && html.includes('EXPLODING') && html.includes('[ EXPLODING // FORK ]')],
+  ['Separate create, join, and waiting-lobby screens', ['createScreen', 'joinScreen', 'partyLobby'].every((id) => html.includes('id="' + id + '"'))],
+  ['Leader-controlled lobby launch', html.includes("type:'start_party'") && html.includes("m.type==='party_started'")],
   ['arena enter/back navigation', html.includes('id="enterArenaBtn"') && html.includes('id="returnLobbyBtn"')],
   ['arrows and jump remain visible on desktop and mobile', html.includes('.touch{display:flex;justify-content:space-between') && ['leftBtn', 'rightBtn', 'jumpBtn'].every((id) => html.includes('id="' + id + '"'))],
   ['mobile left/right/jump controls', ['leftBtn', 'rightBtn', 'jumpBtn'].every((id) => html.includes(`id="${id}"`))],
@@ -30,6 +32,8 @@ const checks = [
   ['eight-player capacity limit', server.includes('const MAX_PARTY_SIZE = 8')],
   ['state validation and relay', server.includes('Number.isFinite(message.x)') && server.includes("type: 'player_state'")],
   ['leave handling and owner transfer', server.includes('function leaveParty(socket)') && server.includes('room.ownerId = room.players.keys().next().value')],
+  ['server checks leader and minimum crew before starting', server.includes("'NOT_PARTY_LEADER'") && server.includes("'PARTY_NEEDS_PLAYERS'")],
+  ['server honors player display names', server.includes('cleanPlayerName(requestedName') && server.includes('addPlayer(socket, room, message.name)')],
   ['Render-compatible host binding', server.includes("const HOST = '0.0.0.0'")],
   ['Render-compatible port', server.includes('process.env.PORT')],
   ['Node web-service start script', pkg.scripts.start === 'node server.js'],
