@@ -62,9 +62,10 @@ test('web service health, party flow, relayed positions, validation, and party c
     assert.match(await home.text(), /Fork Park/);
 
     const host = await connect();
-    const created = await sendAndWait(host, { type: 'create_party' }, (m) => m.type === 'party_created');
+    const created = await sendAndWait(host, { type: 'create_party', name: 'Captain Fork' }, (m) => m.type === 'party_created');
     assert.match(created.code, /^[A-Z2-9]{6}$/);
     assert.equal(created.players.length, 1);
+    assert.equal(created.players[0].name, 'Captain Fork');
     assert.equal(created.ownerId, created.playerId);
 
     const guests = [];
@@ -75,11 +76,12 @@ test('web service health, party flow, relayed positions, validation, and party c
       guests.push(guest);
       const joined = await sendAndWait(
         guest,
-        { type: 'join_party', code: created.code },
+        { type: 'join_party', code: created.code, name: i === 0 ? 'Quantum Buddy' : 'Guest ' + i },
         (m) => m.type === 'party_joined'
       );
       assert.equal(joined.code, created.code);
       assert.equal(joined.players.length, i + 2);
+      assert.equal(joined.players.find((p) => p.id === joined.playerId).name, i === 0 ? 'Quantum Buddy' : 'Guest ' + i);
       if (i === 0) { firstGuest = guest; firstGuestId = joined.playerId; }
     }
 
@@ -108,10 +110,24 @@ test('web service health, party flow, relayed positions, validation, and party c
     );
     assert.equal(invalid.code, 'INVALID_CODE');
 
+    const nonLeaderStart = await sendAndWait(
+      firstGuest,
+      { type: 'start_party' },
+      (m) => m.type === 'error'
+    );
+    assert.equal(nonLeaderStart.code, 'NOT_PARTY_LEADER');
+
     const leaveNotice = nextMessage(host, (m) => m.type === 'player_left' && m.id === firstGuestId);
     firstGuest.close();
     const left = await leaveNotice;
     assert.equal(left.players.length, MAX_PARTY_SIZE - 1);
+
+    const hostLaunch = nextMessage(host, (m) => m.type === 'party_started');
+    const guestLaunch = nextMessage(guests[1], (m) => m.type === 'party_started');
+    host.send(JSON.stringify({ type: 'start_party' }));
+    const [hostStarted, guestStarted] = await Promise.all([hostLaunch, guestLaunch]);
+    assert.equal(hostStarted.code, created.code);
+    assert.equal(guestStarted.code, created.code);
   } finally {
     for (const client of clients) {
       if (client.readyState !== WebSocket.CLOSED) client.terminate();
