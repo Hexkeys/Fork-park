@@ -1,6 +1,6 @@
 # Fork Park: Quantum Chaos
 
-An Exploding Fork-inspired cooperative platform game featuring a fiery themed lobby, neon levels, quantum pads, always-visible movement buttons, and a real-time party system powered by a Node.js WebSocket web service.
+An Exploding Fork-inspired cooperative platform game featuring a terminal-green lobby, six hand-designed platform levels, seeded random level generation, shard-and-switch puzzles, always-visible touch controls, and a real-time party system powered by a Node.js WebSocket web service.
 
 ## Deploy directly as a Render Web Service
 
@@ -44,6 +44,10 @@ The landing page follows the Exploding-fork repo's dark terminal-green style, wi
 - **Move right:** D or →
 - **Jump:** W, ↑, or Space
 - **On every device:** left and right arrow buttons stay visible below the game, on the left; the jump button stays on the right. Keyboard controls also work on desktop.
+- **Level selection:** six designed levels — The Split, Neon Steps, Switchback, Crate Lab, Orbital Fork, and Final Protocol — plus **RANDOM** for repeatable, seed-based layouts.
+- **Puzzle goal:** collect three glowing shards, activate circuit switches to open gate platforms, and get your whole crew into the portal. **HINT** gives the next objective.
+- **Extra buttons:** PREV, NEXT, RESTART, RANDOM, HINT, and PULSE / E. The PULSE button activates a nearby switch or gives a short boost.
+- **Party sync:** the leader controls level changes and random seeds; level changes and switch activations are broadcast to the crew.
 - **Arena navigation:** use **← LOBBY** to return to your waiting room or home screen.
 
 ## Party system
