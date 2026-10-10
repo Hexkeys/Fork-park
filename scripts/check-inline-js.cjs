@@ -20,6 +20,7 @@ const checks = [
   ['six designed levels and level controls', html.includes('FINAL PROTOCOL') && ['prevLevelBtn', 'nextLevelBtn', 'restartLevelBtn', 'randomLevelBtn'].every((id) => html.includes('id="' + id + '"'))],
   ['seeded random level generation', html.includes('function randomLevelData(seed)') && html.includes('RANDOM PROTOCOL')],
   ['shard and switch puzzles', html.includes('world.shards.every') && html.includes('function activateSwitch()') && html.includes('FIND SWITCH')],
+  ['party puzzle-action receiver', html.includes('function applyPuzzleAction()') && html.includes("m.type==='puzzle_action'") && server.includes("message.type === 'puzzle_action'")],
   ['keyboard and mobile puzzle action control', html.includes("e.key.toLowerCase()==='e'") && html.includes('id="actionBtn"')],
   ['leader-controlled synchronized level changes', html.includes("type:'set_level'") && html.includes("m.type==='level_changed'") && server.includes("message.type === 'set_level'") && server.includes("message.type === 'puzzle_action'")],
   ['Exploding Fork terminal home screen', html.includes('id="lobbyHome"') && html.includes('EXPLODING') && html.includes('[ EXPLODING // FORK ]')],
