@@ -128,6 +128,22 @@ test('web service health, party flow, relayed positions, validation, and party c
     const [hostStarted, guestStarted] = await Promise.all([hostLaunch, guestLaunch]);
     assert.equal(hostStarted.code, created.code);
     assert.equal(guestStarted.code, created.code);
+    assert.equal(hostStarted.level, 0);
+    assert.equal(hostStarted.seed, 0);
+
+    const nonLeaderLevel = await sendAndWait(firstGuest, { type: 'set_level', level: 6, seed: 123456 }, (m) => m.type === 'error');
+    assert.equal(nonLeaderLevel.code, 'NOT_PARTY_LEADER');
+    const hostLevelChange = nextMessage(host, (m) => m.type === 'level_changed');
+    const guestLevelChange = nextMessage(guests[1], (m) => m.type === 'level_changed');
+    host.send(JSON.stringify({ type: 'set_level', level: 6, seed: 123456 }));
+    const [hostLevel, guestLevel] = await Promise.all([hostLevelChange, guestLevelChange]);
+    assert.equal(hostLevel.level, 6);
+    assert.equal(guestLevel.level, 6);
+    assert.equal(hostLevel.seed, 123456);
+    assert.equal(guestLevel.seed, 123456);
+
+    const badLevel = await sendAndWait(host, { type: 'set_level', level: 99, seed: 1 }, (m) => m.type === 'error');
+    assert.equal(badLevel.code, 'INVALID_LEVEL');
   } finally {
     for (const client of clients) {
       if (client.readyState !== WebSocket.CLOSED) client.terminate();
