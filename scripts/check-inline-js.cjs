@@ -17,6 +17,9 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
 const checks = [
   ['canvas game', html.includes('<canvas id="game"')],
+  ['Exploding Fork lobby first screen', html.includes('id="lobbyScreen"') && html.includes('YOUR CREW.')],
+  ['arena enter/back navigation', html.includes('id="enterArenaBtn"') && html.includes('id="returnLobbyBtn"')],
+  ['arrows and jump remain visible on desktop and mobile', html.includes('.touch{display:flex;justify-content:space-between') && ['leftBtn', 'rightBtn', 'jumpBtn'].every((id) => html.includes('id="' + id + '"'))],
   ['mobile left/right/jump controls', ['leftBtn', 'rightBtn', 'jumpBtn'].every((id) => html.includes(`id="${id}"`))],
   ['browser WebSocket client', html.includes("new WebSocket(protocol+'//'+window.location.host+'/ws')")],
   ['party create and join messages', html.includes("type:'create_party'") && html.includes("type:'join_party',code")],
