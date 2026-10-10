@@ -225,7 +225,7 @@ function createForkParkServer() {
 
       // Validate the destination before removing the player from their current room.
       leaveParty(socket);
-      const player = addPlayer(socket, room);
+      const player = addPlayer(socket, room, message.name);
       send(socket, {
         type: 'party_joined',
         code,
