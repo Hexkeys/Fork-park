@@ -340,6 +340,12 @@ function activateSwitch(){
   p.vx+=direction*3.2;
   setGameStatus('QUANTUM PULSE!');
 }
+function applyPuzzleAction(){
+  world.gateOpen=true;
+  world.switches.forEach(s=>{s.active=true});
+  updateLevelUi();
+  setGameStatus('CIRCUIT OPEN // BRIDGE ENABLED');
+}
 
 function setNetworkStatus(message){document.querySelectorAll('[data-network-status]').forEach(el=>{el.textContent=message})}
 function setGameStatus(message){document.getElementById('gameStatus').textContent=message}
