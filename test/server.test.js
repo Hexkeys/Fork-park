@@ -131,7 +131,7 @@ test('web service health, party flow, relayed positions, validation, and party c
     assert.equal(hostStarted.level, 0);
     assert.equal(hostStarted.seed, 0);
 
-    const nonLeaderLevel = await sendAndWait(firstGuest, { type: 'set_level', level: 6, seed: 123456 }, (m) => m.type === 'error');
+    const nonLeaderLevel = await sendAndWait(guests[1], { type: 'set_level', level: 6, seed: 123456 }, (m) => m.type === 'error');
     assert.equal(nonLeaderLevel.code, 'NOT_PARTY_LEADER');
     const hostLevelChange = nextMessage(host, (m) => m.type === 'level_changed');
     const guestLevelChange = nextMessage(guests[1], (m) => m.type === 'level_changed');
@@ -144,6 +144,13 @@ test('web service health, party flow, relayed positions, validation, and party c
 
     const badLevel = await sendAndWait(host, { type: 'set_level', level: 99, seed: 1 }, (m) => m.type === 'error');
     assert.equal(badLevel.code, 'INVALID_LEVEL');
+
+    const hostPuzzle = nextMessage(host, (m) => m.type === 'puzzle_action');
+    const guestPuzzle = nextMessage(guests[1], (m) => m.type === 'puzzle_action');
+    host.send(JSON.stringify({ type: 'puzzle_action' }));
+    const [hostActivated, guestActivated] = await Promise.all([hostPuzzle, guestPuzzle]);
+    assert.equal(hostActivated.code, created.code);
+    assert.equal(guestActivated.playerId, created.players[0].id);
   } finally {
     for (const client of clients) {
       if (client.readyState !== WebSocket.CLOSED) client.terminate();
