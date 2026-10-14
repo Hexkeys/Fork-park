@@ -18,6 +18,9 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const checks = [
   ['canvas game', html.includes('<canvas id="game"')],
   ['six designed levels and level controls', html.includes('FINAL PROTOCOL') && ['prevLevelBtn', 'nextLevelBtn', 'restartLevelBtn', 'randomLevelBtn'].every((id) => html.includes('id="' + id + '"'))],
+  ['automatic level advance after clearing', html.includes('NEXT LEVEL LOADING AUTOMATICALLY') && html.includes('const nextLevel=clearedLevel===6?6:(clearedLevel+1)%6')],
+  ['long scrolling world with camera follow', html.includes('function extendLevel(base,index)') && html.includes('width:3200') && html.includes('ctx.translate(-cameraX,0)')],
+  ['full-screen game viewport and toggle', html.includes('#gameLayout.active{display:block!important;position:fixed;inset:0') && html.includes('id="fullscreenBtn"')],
   ['seeded random level generation', html.includes('function randomLevelData(seed)') && html.includes('RANDOM PROTOCOL')],
   ['shard and switch puzzles', html.includes('world.shards.every') && html.includes('function activateSwitch()') && html.includes('FIND SWITCH')],
   ['party puzzle-action receiver', html.includes('function applyPuzzleAction()') && html.includes("m.type==='puzzle_action'") && server.includes("message.type === 'puzzle_action'")],
