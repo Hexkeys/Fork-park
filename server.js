@@ -123,6 +123,7 @@ function createForkParkServer() {
     if (!room || !room.players.has(playerId)) return;
 
     room.players.delete(playerId);
+    room.portalReady.delete(playerId);
     if (room.players.size === 0) {
       rooms.delete(code);
       return;
@@ -178,7 +179,7 @@ function createForkParkServer() {
         fail(socket, 'PARTY_CREATE_FAILED', 'Could not create a party. Please try again.');
         return;
       }
-      const room = { code, ownerId: null, players: new Map(), started: false, currentLevel: 0, currentSeed: 0 };
+      const room = { code, ownerId: null, players: new Map(), started: false, currentLevel: 0, currentSeed: 0, portalReady: new Set(), lastWipeAt: 0 };
       rooms.set(code, room);
       const player = addPlayer(socket, room, message.name);
       room.ownerId = player.id;
@@ -257,6 +258,7 @@ function createForkParkServer() {
         return;
       }
       room.started = true;
+      room.portalReady.clear();
       broadcast(room, {
         type: 'party_started',
         code: room.code,
@@ -290,7 +292,41 @@ function createForkParkServer() {
       }
       room.currentLevel = message.level;
       room.currentSeed = message.seed;
+      room.portalReady.clear();
       broadcast(room, { type: 'level_changed', code: room.code, level: room.currentLevel, seed: room.currentSeed, ownerId: room.ownerId });
+      return;
+    }
+
+    if (message.type === 'party_wipe') {
+      const room = socket.roomCode && rooms.get(socket.roomCode);
+      const player = room && room.players.get(socket.playerId);
+      if (!room || !player || !room.started) {
+        fail(socket, 'NOT_IN_PARTY', 'Start a party before sending a crew reset.');
+        return;
+      }
+      const now = Date.now();
+      if (now - room.lastWipeAt < 1200) return;
+      room.lastWipeAt = now;
+      room.portalReady.clear();
+      let spawn = 0;
+      for (const member of room.players.values()) {
+        member.x = 65 + spawn * 34;
+        member.y = 410;
+        spawn += 1;
+      }
+      broadcast(room, { type: 'party_wiped', code: room.code, reason: 'CREW WIPE', players: snapshot(room) });
+      return;
+    }
+
+    if (message.type === 'portal_entered') {
+      const room = socket.roomCode && rooms.get(socket.roomCode);
+      const player = room && room.players.get(socket.playerId);
+      if (!room || !player || !room.started) {
+        fail(socket, 'NOT_IN_PARTY', 'Start a party before entering the portal.');
+        return;
+      }
+      room.portalReady.add(player.id);
+      broadcast(room, { type: 'portal_progress', code: room.code, readyPlayerIds: [...room.portalReady] });
       return;
     }
 
