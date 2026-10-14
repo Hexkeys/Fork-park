@@ -366,7 +366,7 @@ function loadLevel(index,seed){
   let spawn=0;
   players.forEach((p,id)=>{
     if(id===me)return;
-    p.x=Math.min(110+spawn*38,250);p.y=410;p.vx=0;p.vy=0;p.ground=false;
+    p.x=65+spawn*12;p.y=410;p.vx=0;p.vy=0;p.ground=false;
     if(remoteStates[id]){remoteStates[id].x=p.x;remoteStates[id].y=p.y}
     spawn++;
   });
@@ -419,7 +419,7 @@ function resetRunToStart(reason){
   world.gateOpen=world.switches.length===0;
   let spawn=0;
   players.forEach((player,id)=>{
-    player.x=65+spawn*34;player.y=410;player.vx=0;player.vy=0;player.ground=false;
+    player.x=65+spawn*12;player.y=410;player.vx=0;player.vy=0;player.ground=false;
     player.dashFrames=0;
     if(id!==me)remoteStates[id]={...(remoteStates[id]||{}),id,x:player.x,y:player.y,name:player.name,color:player.color};
     spawn++;
