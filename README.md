@@ -48,7 +48,9 @@ The landing page follows the Exploding-fork repo's dark terminal-green style, wi
 - **Automatic progression:** after the shard/switch puzzle is solved and the whole party reaches the portal, the next stage loads automatically. The host advances the multiplayer party.
 - **Fullscreen display:** gameplay fills the entire viewport; use **⛶ FULLSCREEN** to request browser fullscreen as well.
 - **Level selection:** six designed levels — The Split, Neon Steps, Switchback, Crate Lab, Orbital Fork, and Final Protocol — plus **RANDOM** for repeatable, seed-based layouts.
-- **Puzzle goal:** collect three glowing shards, activate circuit switches to open gate platforms, and get your whole crew into the portal. **HINT** gives the next objective.
+- **Puzzle goal:** collect the glowing shards and activate circuit switches to open gates, then have every player enter the portal. Portal entry is remembered while the crew catches up.
+- **Team wipe:** a fall or a moving hazard resets every player to the beginning of the current level and resets that level's puzzle progress. There are no mid-level respawn checkpoints.
+- **More mechanics:** moving spike hazards can wipe the crew, gold spring pads launch you upward, and **DASH / SHIFT** gives a short burst of speed with a cooldown.
 - **Extra buttons:** PREV, NEXT, RESTART, RANDOM, HINT, and PULSE / E. The PULSE button activates a nearby switch or gives a short boost.
 - **Party sync:** the leader controls level changes and random seeds; level changes and switch activations are broadcast to the crew.
 - **Arena navigation:** use **← LOBBY** to return to your waiting room or home screen.
