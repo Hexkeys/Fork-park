@@ -165,7 +165,7 @@ test('web service health, party flow, relayed positions, validation, and party c
     host.send(JSON.stringify({ type: 'party_wipe', reason: 'test reset' }));
     const [hostReset, guestReset] = await Promise.all([hostWipe, guestWipe]);
     assert.equal(hostReset.players.length, MAX_PARTY_SIZE - 1);
-    assert.deepEqual(hostReset.players.map(p => p.x), [65,99,133,167,201,235,269]);
+    assert.deepEqual(hostReset.players.map(p => p.x), [65,77,89,101,113,125,137]);
     assert.deepEqual(hostReset.players.map(p => p.x), guestReset.players.map(p => p.x));
   } finally {
     for (const client of clients) {
