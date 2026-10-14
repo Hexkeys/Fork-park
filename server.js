@@ -324,7 +324,7 @@ function createForkParkServer() {
       socket.lastStateAt = now;
       if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
 
-      player.x = Math.round(Math.max(0, Math.min(930, message.x)));
+      player.x = Math.round(Math.max(0, Math.min(4000, message.x)));
       player.y = Math.round(Math.max(-100, Math.min(600, message.y)));
       broadcast(room, {
         type: 'player_state',
