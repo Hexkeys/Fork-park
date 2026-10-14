@@ -310,7 +310,7 @@ function createForkParkServer() {
       room.portalReady.clear();
       let spawn = 0;
       for (const member of room.players.values()) {
-        member.x = 65 + spawn * 34;
+        member.x = 65 + spawn * 12;
         member.y = 410;
         spawn += 1;
       }
