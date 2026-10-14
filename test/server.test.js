@@ -152,6 +152,21 @@ test('web service health, party flow, relayed positions, validation, and party c
     const [hostActivated, guestActivated] = await Promise.all([hostPuzzle, guestPuzzle]);
     assert.equal(hostActivated.code, created.code);
     assert.equal(guestActivated.playerId, created.players[0].id);
+
+    const hostPortal = nextMessage(host, (m) => m.type === 'portal_progress');
+    const guestPortal = nextMessage(guests[1], (m) => m.type === 'portal_progress');
+    host.send(JSON.stringify({ type: 'portal_entered' }));
+    const [hostProgress, guestProgress] = await Promise.all([hostPortal, guestPortal]);
+    assert.ok(hostProgress.readyPlayerIds.includes(created.players[0].id));
+    assert.deepEqual(hostProgress.readyPlayerIds, guestProgress.readyPlayerIds);
+
+    const hostWipe = nextMessage(host, (m) => m.type === 'party_wiped');
+    const guestWipe = nextMessage(guests[1], (m) => m.type === 'party_wiped');
+    host.send(JSON.stringify({ type: 'party_wipe', reason: 'test reset' }));
+    const [hostReset, guestReset] = await Promise.all([hostWipe, guestWipe]);
+    assert.equal(hostReset.players.length, MAX_PARTY_SIZE - 1);
+    assert.deepEqual(hostReset.players.map(p => p.x), [65,99,133,167,201,235,269]);
+    assert.deepEqual(hostReset.players.map(p => p.x), guestReset.players.map(p => p.x));
   } finally {
     for (const client of clients) {
       if (client.readyState !== WebSocket.CLOSED) client.terminate();
