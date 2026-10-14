@@ -25,6 +25,7 @@ const checks = [
   ['shard and switch puzzles', html.includes('world.shards.every') && html.includes('function activateSwitch()') && html.includes('FIND SWITCH')],
   ['party puzzle-action receiver', html.includes('function applyPuzzleAction()') && html.includes("m.type==='puzzle_action'") && server.includes("message.type === 'puzzle_action'")],
   ['all-player crew wipe resets to start', html.includes("type:'party_wipe'") && html.includes("m.type==='party_wiped'") && server.includes("message.type === 'party_wipe'") && server.includes("type: 'party_wiped'")],
+  ['all players spawn inside the starting platform', html.includes('let spawn=1;') && html.includes('player.x=65+spawn*12') && server.includes('member.x = 65 + spawn * 12')],
   ['every player must latch portal before progression', html.includes("type:'portal_entered'") && html.includes("m.type==='portal_progress'") && html.includes('[...players.keys()].every(id=>Boolean(portalReady[id]))') && server.includes("message.type === 'portal_entered'")],
   ['dash and spring mechanics', html.includes('function useDash()') && html.includes('id="dashBtn"') && html.includes("b.type==='boost'") && html.includes('world.hazards.forEach')],
 
