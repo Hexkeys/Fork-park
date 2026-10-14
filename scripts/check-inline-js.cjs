@@ -24,6 +24,10 @@ const checks = [
   ['seeded random level generation', html.includes('function randomLevelData(seed)') && html.includes('RANDOM PROTOCOL')],
   ['shard and switch puzzles', html.includes('world.shards.every') && html.includes('function activateSwitch()') && html.includes('FIND SWITCH')],
   ['party puzzle-action receiver', html.includes('function applyPuzzleAction()') && html.includes("m.type==='puzzle_action'") && server.includes("message.type === 'puzzle_action'")],
+  ['all-player crew wipe resets to start', html.includes("type:'party_wipe'") && html.includes("m.type==='party_wiped'") && server.includes("message.type === 'party_wipe'") && server.includes("type: 'party_wiped'")],
+  ['every player must latch portal before progression', html.includes("type:'portal_entered'") && html.includes("m.type==='portal_progress'") && html.includes('[...players.keys()].every(id=>Boolean(portalReady[id]))') && server.includes("message.type === 'portal_entered'")],
+  ['dash and spring mechanics', html.includes('function useDash()') && html.includes("id='dashBtn'") && html.includes("b.type==='boost'") && html.includes('world.hazards.forEach')],
+
   ['keyboard and mobile puzzle action control', html.includes("e.key.toLowerCase()==='e'") && html.includes('id="actionBtn"')],
   ['leader-controlled synchronized level changes', html.includes("type:'set_level'") && html.includes("m.type==='level_changed'") && server.includes("message.type === 'set_level'") && server.includes("message.type === 'puzzle_action'")],
   ['Exploding Fork terminal home screen', html.includes('id="lobbyHome"') && html.includes('EXPLODING') && html.includes('[ EXPLODING // FORK ]')],
