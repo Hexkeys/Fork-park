@@ -121,6 +121,38 @@ button.secondary{background:#031008;border-color:#1c6b38;color:#7dca92}
 #shardCounter{color:var(--green);white-space:nowrap;font-weight:900}
 #puzzleHint{color:#a9dcb7;overflow-wrap:anywhere}
 @media(max-width:560px){.level-toolbar button{flex:1 1 28%;min-width:90px}.puzzle-hud{grid-template-columns:1fr;gap:4px}}
+
+/* Full-screen, edge-to-edge gameplay with the controls floating over the world */
+#gameLayout.active{display:block!important;position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:1000;margin:0;padding:0;overflow:hidden;background:#020b05}
+#gameLayout.active .gamebox{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:0;box-shadow:none;overflow:hidden;background:#020b05}
+#gameLayout.active canvas{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;display:block;background:#020b05}
+#gameLayout.active .gamehead{position:absolute;z-index:20;top:0;left:0;right:0;min-height:50px;padding:8px 12px;background:#020b05dd;border-bottom:1px solid #1c6b38;backdrop-filter:blur(10px)}
+#gameLayout.active .gamehead-left{gap:7px}
+#gameLayout.active .gamehead-left strong{font-size:clamp(11px,1.5vw,16px);color:#39ff72}
+#gameLayout.active .gamehead .status{font-size:clamp(9px,1.2vw,12px);text-align:right}
+#gameLayout.active .side{display:none!important}
+#gameLayout.active .touch{position:absolute;z-index:25;left:12px;right:12px;bottom:12px;display:flex!important;visibility:visible!important;justify-content:space-between;align-items:flex-end;padding:0;background:transparent;border:0;pointer-events:none}
+#gameLayout.active .touch .move{gap:9px}
+#gameLayout.active .touch button{pointer-events:auto;min-width:64px;height:58px;padding:8px 13px;background:#031008df;border:1px solid #39ff72;color:#39ff72;box-shadow:0 0 16px #39ff7220;backdrop-filter:blur(8px)}
+#gameLayout.active .touch .jump{min-width:94px;background:#073016ed;border-color:#39ff72;color:#bfffd0;font-size:13px}
+#gameLayout.active .level-toolbar{position:absolute;z-index:24;top:96px;right:12px;width:min(450px,52vw);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:7px;background:#020b05c9;border:1px solid #1c6b38;backdrop-filter:blur(8px)}
+#gameLayout.active .level-toolbar button{min-width:0;min-height:35px;padding:7px 5px;font-size:10px}
+#gameLayout.active .puzzle-hud{position:absolute;z-index:23;top:58px;left:12px;width:min(420px,45vw);display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px 12px;background:#020b05c9;border:1px solid #1c6b38;backdrop-filter:blur(8px)}
+#gameLayout.active .small-button{background:#031008df;color:#39ff72;border-color:#1c6b38;border-radius:3px}
+body:has(#gameLayout.active){overflow:hidden}
+@media(max-width:700px){
+  #gameLayout.active .gamehead{padding:8px;gap:4px}
+  #gameLayout.active .gamehead-left{gap:5px}
+  #gameLayout.active .gamehead-left strong{max-width:38vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #gameLayout.active .small-button{padding:6px;font-size:9px}
+  #gameLayout.active .gamehead .status{max-width:35vw;overflow-wrap:anywhere}
+  #gameLayout.active .puzzle-hud{top:58px;left:8px;right:8px;width:auto;grid-template-columns:auto 1fr;gap:8px;padding:8px;font-size:10px}
+  #gameLayout.active .level-toolbar{top:126px;left:8px;right:8px;width:auto;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:6px}
+  #gameLayout.active .level-toolbar button{min-height:34px;font-size:9px}
+  #gameLayout.active .touch{left:9px;right:9px;bottom:10px}
+  #gameLayout.active .touch button{min-width:58px;height:56px}
+  #gameLayout.active .touch .jump{min-width:86px}
+}
 </style>
 </head>
 <body><main class="wrap">
@@ -184,7 +216,7 @@ button.secondary{background:#031008;border-color:#1c6b38;color:#7dca92}
   </div>
 </section>
 
-<div class="layout screen" id="gameLayout"><section class="gamebox"><div class="gamehead"><div class="gamehead-left"><strong id="levelLabel">LEVEL 01 — THE SPLIT</strong><button id="returnLobbyBtn" class="small-button">← LOBBY</button></div><span class="status" id="gameStatus">READY TO PLAY</span></div><canvas id="game" width="960" height="540" aria-label="Fork Park platform game"></canvas>
+<div class="layout screen" id="gameLayout"><section class="gamebox"><div class="gamehead"><div class="gamehead-left"><strong id="levelLabel">LEVEL 01 — THE SPLIT</strong><button id="returnLobbyBtn" class="small-button">← LOBBY</button><button id="fullscreenBtn" class="small-button" aria-label="Toggle fullscreen">⛶ FULLSCREEN</button></div><span class="status" id="gameStatus">READY TO PLAY</span></div><canvas id="game" width="960" height="540" aria-label="Fork Park platform game"></canvas>
 <div class="touch"><div class="move"><button id="leftBtn" aria-label="Move left">◀</button><button id="rightBtn" aria-label="Move right">▶</button></div><button class="jump" id="jumpBtn">JUMP ↟</button></div>
 <div class="level-toolbar" role="group" aria-label="Level and puzzle controls">
   <button class="secondary" id="prevLevelBtn" aria-label="Previous level">◀ PREV</button>
@@ -211,8 +243,8 @@ if (!canvas || !ctx) {
 const W=960,H=540,keys={left:false,right:false},players=new Map();
 const colors=['#39ff72','#bfff4f','#ff8e3c','#8fe6ac','#e4ffd0'];
 let me='solo',socket=null,socketReady=false,host=false,ownerId=null,roomCode='';
-let remoteStates=Object.create(null),lastSend=0,won=false,reconnectTimer=null;
-let currentLevel=0,currentSeed=0;
+let remoteStates=Object.create(null),lastSend=0,won=false,reconnectTimer=null,advanceTimer=null;
+let currentLevel=0,currentSeed=0,cameraX=0,checkpointX=65;
 const levelTemplates=[
 {name:'THE SPLIT',goal:{x:875,y:385,w:42,h:70},platforms:[
 {x:0,y:470,w:245,h:70,type:'solid'},{x:300,y:425,w:145,h:22,type:'quantum'},
@@ -248,7 +280,32 @@ shards:[{x:260,y:400},{x:510,y:280},{x:755,y:390}],switches:[]},
 {x:830,y:455,w:130,h:85,type:'solid'}],
 shards:[{x:255,y:395},{x:390,y:330},{x:745,y:360}],switches:[{x:515,y:380,label:'FINAL SWITCH'}]}
 ];
-const world={gravity:.62,friction:.82,goal:{x:875,y:385,w:42,h:70},platforms:[],shards:[],switches:[],gateOpen:false};
+
+function extendLevel(base,index){
+  const spec={
+    name:base.name,
+    goal:{...base.goal},
+    platforms:base.platforms.map(p=>({...p})),
+    shards:base.shards.map(s=>({...s})),
+    switches:base.switches.map(s=>({...s}))
+  };
+  const routeY=[425,395,365,410,380,350,405,430,390,360,410,380,420,400];
+  for(let i=0;i<routeY.length;i++){
+    const x=980+i*132;
+    const y=routeY[(i+index*2)%routeY.length];
+    const type=(i===7||i===11)?'gate':((i+index)%3===0?'solid':'quantum');
+    const w=100+((i+index)%3)*5;
+    spec.platforms.push({x,y,w,h:18,type});
+    if(i%2===1)spec.shards.push({x:x+w/2,y:y-25});
+  }
+  const switchPlatform=spec.platforms[12];
+  spec.switches.push({x:switchPlatform.x+switchPlatform.w/2,y:switchPlatform.y-30,label:'LONG-RUN CIRCUIT'});
+  spec.platforms.push({x:2840,y:455,w:360,h:85,type:'solid'});
+  spec.goal={x:3025,y:385,w:42,h:70};
+  return spec;
+}
+levelTemplates.forEach((spec,index)=>{levelTemplates[index]=extendLevel(spec,index)});
+const world={gravity:.62,friction:.82,width:3200,goal:{x:875,y:385,w:42,h:70},platforms:[],shards:[],switches:[],gateOpen:false};
 const mePlayer={id:me,name:'Exploding Fork',x:65,y:410,vx:0,vy:0,w:30,h:42,color:colors[1],ground:false};
 players.set(me,mePlayer);
 
@@ -290,7 +347,9 @@ function updateLevelControls(){
 function loadLevel(index,seed){
   currentLevel=index===6?6:Math.max(0,Math.min(levelTemplates.length-1,index|0));
   currentSeed=(seed>>>0)||0;
-  const spec=currentLevel===6?randomLevelData(currentSeed):levelTemplates[currentLevel];
+  if(advanceTimer){window.clearTimeout(advanceTimer);advanceTimer=null}
+  const spec=currentLevel===6?extendLevel(randomLevelData(currentSeed),6):levelTemplates[currentLevel];
+  cameraX=0;checkpointX=65;
   world.goal={...spec.goal};
   world.platforms=spec.platforms.map(p=>({...p}));
   world.shards=spec.shards.map(s=>({...s,collected:false}));
@@ -367,6 +426,8 @@ function render(){
   ctx.strokeStyle='#39ff7214';ctx.lineWidth=1;
   for(let x=0;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
   for(let y=0;y<H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  cameraX=Math.max(0,Math.min(world.width-W,mePlayer.x-W*.36));
+  ctx.save();ctx.translate(-cameraX,0);
   world.platforms.forEach(p=>{
     if(p.type==='gate'&&!world.gateOpen){ctx.fillStyle='#32191a';ctx.strokeStyle='#ff8e3c';ctx.shadowColor='#ff8e3c';}
     else{const q=p.type==='quantum';ctx.fillStyle=q?'#0b2c16':'#14211a';ctx.strokeStyle=q?'#39ff72':'#285535';ctx.shadowColor=q?'#39ff72':'transparent'}
@@ -379,15 +440,17 @@ function render(){
   world.switches.forEach(s=>{ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,13,0,Math.PI*2);ctx.fillStyle=s.active?'#39ff72':'#ff8e3c';ctx.shadowColor=s.active?'#39ff72':'#ff8e3c';ctx.shadowBlur=17;ctx.fill();ctx.shadowBlur=0;text(s.active?'ON':'E',s.x,s.y+4,10,'#020b05','center');ctx.restore()});
   const g=world.goal;ctx.save();ctx.shadowColor='#39ff72';ctx.shadowBlur=25;ctx.strokeStyle='#39ff72';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(g.x+g.w/2,g.y+g.h/2,g.w/2,g.h/2,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#39ff7220';ctx.fill();ctx.restore();text('EXIT',g.x+g.w/2,g.y-8,12,'#39ff72','center');
   players.forEach(drawFork);
-  if(won){ctx.fillStyle='#020b05dd';ctx.fillRect(0,0,W,H);text('LEVEL CLEARED!',W/2,220,42,'#39ff72','center');text('Puzzle solved. Crew synchronized.',W/2,265,20,'#e0ffe8','center');text('Use NEXT LEVEL to continue.',W/2,305,15,'#bdebc9','center')}
+  ctx.restore();
+  if(won){ctx.fillStyle='#020b05dd';ctx.fillRect(0,0,W,H);text('LEVEL CLEARED!',W/2,220,42,'#39ff72','center');text('Puzzle solved. Crew synchronized.',W/2,265,20,'#e0ffe8','center');text('NEXT LEVEL LOADING AUTOMATICALLY…',W/2,305,15,'#bdebc9','center')}
   requestAnimationFrame(render);
 }
 function collide(p){p.ground=false;for(const b of world.platforms){if(b.type==='gate'&&!world.gateOpen)continue;if(p.vy>=0&&p.x+p.w>b.x&&p.x<b.x+b.w&&p.y+p.h>=b.y&&p.y+p.h-p.vy<=b.y){p.y=b.y-p.h;p.vy=0;p.ground=true}}}
 function atPortal(p){const g=world.goal;return p.x+p.w>g.x&&p.x<g.x+g.w&&p.y+p.h>g.y&&p.y<g.y+g.h}
 function update(){
   const p=mePlayer,ax=(keys.right?1:0)-(keys.left?1:0);p.vx+=ax*.7;p.vx=Math.max(-5.2,Math.min(5.2,p.vx));if(!ax)p.vx*=world.friction;
-  p.x+=p.vx;p.vy=Math.min(12,p.vy+world.gravity);p.y+=p.vy;collide(p);p.x=Math.max(0,Math.min(W-p.w,p.x));
-  if(p.y>H+80){p.x=65;p.y=400;p.vx=0;p.vy=0}
+  p.x+=p.vx;p.vy=Math.min(12,p.vy+world.gravity);p.y+=p.vy;collide(p);p.x=Math.max(0,Math.min(world.width-p.w,p.x));
+  if(p.ground&&p.x>checkpointX+350)checkpointX=p.x;
+  if(p.y>H+80){p.x=checkpointX;p.y=400;p.vx=0;p.vy=0}
   for(const [id,r] of Object.entries(remoteStates)){const q=players.get(id);if(q){q.x=r.x;q.y=r.y;q.name=r.name||q.name||'Fork buddy';q.color=r.color||q.color}}
   for(const shard of world.shards){
     if(shard.collected)continue;
@@ -401,8 +464,19 @@ function update(){
     if(!shardsReady)setGameStatus(at?'PORTAL LOCKED // FIND SHARDS':'COLLECT FORK SHARDS');
     else if(!switchesReady)setGameStatus('FIND SWITCH // PRESS E / PULSE');
     else if(at&&!teamReady)setGameStatus('WAITING FOR PARTY…');
-    else if(at&&teamReady){won=true;setGameStatus('LEVEL CLEARED!')}
-    else setGameStatus('REACH THE PORTAL');
+    else if(at&&teamReady){
+      won=true;setGameStatus('LEVEL CLEARED! NEXT LEVEL LOADING…');
+      if((!roomCode||host)&&!advanceTimer){
+        const clearedLevel=currentLevel;
+        advanceTimer=window.setTimeout(()=>{
+          advanceTimer=null;
+          if(!won)return;
+          const nextLevel=clearedLevel===6?6:(clearedLevel+1)%6;
+          const nextSeed=nextLevel===6?((Math.random()*0xffffffff)>>>0):0;
+          requestLevel(nextLevel,nextSeed);
+        },1800);
+      }
+    }else setGameStatus('REACH THE PORTAL');
   }
   if(socket&&socket.readyState===WebSocket.OPEN&&roomCode&&Date.now()-lastSend>50){try{socket.send(JSON.stringify({type:'state',x:p.x,y:p.y}));lastSend=Date.now()}catch{setNetworkStatus('Movement sync interrupted. Reconnecting…')}}
   requestAnimationFrame(update);
@@ -529,6 +603,12 @@ function bindHold(id,key){const b=document.getElementById(id),on=e=>{e.preventDe
 bindHold('leftBtn','left');bindHold('rightBtn','right');
 document.getElementById('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mePlayer.ground)mePlayer.vy=-12});
 document.getElementById('returnLobbyBtn').addEventListener('click',()=>showScreen(roomCode?'partyLobby':'lobbyHome'));
+document.getElementById('fullscreenBtn').addEventListener('click',async()=>{
+  try{
+    if(document.fullscreenElement){await document.exitFullscreen()}
+    else if(document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen()}
+  }catch{setGameStatus('Fullscreen is unavailable in this browser.')}
+});
 document.getElementById('prevLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?5:(currentLevel+levelTemplates.length-1)%levelTemplates.length,0));
 document.getElementById('nextLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?0:(currentLevel+1)%levelTemplates.length,0));
 document.getElementById('randomLevelBtn').addEventListener('click',()=>requestLevel(6,(Math.random()*0xffffffff)>>>0));
