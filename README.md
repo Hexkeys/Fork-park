@@ -44,6 +44,9 @@ The landing page follows the Exploding-fork repo's dark terminal-green style, wi
 - **Move right:** D or →
 - **Jump:** W, ↑, or Space
 - **On every device:** left and right arrow buttons stay visible below the game, on the left; the jump button stays on the right. Keyboard controls also work on desktop.
+- **Long scrolling levels:** each designed stage and random layout stretches across a wider world with a camera that follows you.
+- **Automatic progression:** after the shard/switch puzzle is solved and the whole party reaches the portal, the next stage loads automatically. The host advances the multiplayer party.
+- **Fullscreen display:** gameplay fills the entire viewport; use **⛶ FULLSCREEN** to request browser fullscreen as well.
 - **Level selection:** six designed levels — The Split, Neon Steps, Switchback, Crate Lab, Orbital Fork, and Final Protocol — plus **RANDOM** for repeatable, seed-based layouts.
 - **Puzzle goal:** collect three glowing shards, activate circuit switches to open gate platforms, and get your whole crew into the portal. **HINT** gives the next objective.
 - **Extra buttons:** PREV, NEXT, RESTART, RANDOM, HINT, and PULSE / E. The PULSE button activates a nearby switch or gives a short boost.
