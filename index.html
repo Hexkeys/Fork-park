@@ -363,7 +363,7 @@ function loadLevel(index,seed){
   world.gateOpen=world.switches.length===0;
   won=false;keys.left=false;keys.right=false;
   mePlayer.x=65;mePlayer.y=410;mePlayer.vx=0;mePlayer.vy=0;mePlayer.ground=false;
-  let spawn=0;
+  let spawn=1;
   players.forEach((p,id)=>{
     if(id===me)return;
     p.x=65+spawn*12;p.y=410;p.vx=0;p.vy=0;p.ground=false;
@@ -592,7 +592,7 @@ function handleServerMessage(m){
   if(m.type==='party_created'||m.type==='party_joined'){applyParty(m);return}
   if(m.type==='player_joined'&&m.player&&m.player.id!==me){const p={...m.player,w:30,h:42,vx:0,vy:0,ground:false};players.set(p.id,p);remoteStates[p.id]={...m.player};if(m.ownerId)ownerId=m.ownerId;host=ownerId===me;roster();setNetworkStatus('Party '+roomCode+' · '+players.size+' player(s)');return}
   if(m.type==='player_state'&&m.player&&m.player.id!==me){const p=m.player;remoteStates[p.id]=p;if(!players.has(p.id)){players.set(p.id,{...p,w:30,h:42,vx:0,vy:0,ground:false});roster()}return}
-  if(m.type==='player_left'){players.delete(m.id);delete remoteStates[m.id];if(m.ownerId)ownerId=m.ownerId;host=ownerId===me;roster();setNetworkStatus(roomCode?'Party '+roomCode+' · '+players.size+' player(s)':'A party member left');return}
+  if(m.type==='player_left'){players.delete(m.id);delete remoteStates[m.id];delete portalReady[m.id];if(m.ownerId)ownerId=m.ownerId;host=ownerId===me;roster();setNetworkStatus(roomCode?'Party '+roomCode+' · '+players.size+' player(s)':'A party member left');return}
   if(m.type==='party_update'){ownerId=m.ownerId||ownerId;host=ownerId===me;roster();return}
   if(m.type==='party_started'){
     if(m.code&&m.code===roomCode){ownerId=m.ownerId||ownerId;host=ownerId===me;loadLevel(Number.isInteger(m.level)?m.level:0,Number.isInteger(m.seed)?m.seed:0);setGameStatus('PARTY RUN INITIALIZED');showScreen('gameLayout');}
