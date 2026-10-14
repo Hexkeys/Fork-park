@@ -225,6 +225,7 @@ body:has(#gameLayout.active){overflow:hidden}
   <button class="secondary" id="randomLevelBtn" aria-label="Generate a random level">⚄ RANDOM</button>
   <button class="secondary" id="hintBtn" aria-label="Show a puzzle hint">? HINT</button>
   <button id="actionBtn" aria-label="Interact with a switch or use a quantum pulse">⚡ PULSE / E</button>
+  <button id="dashBtn" aria-label="Dash forward">➤ DASH / SHIFT</button>
 </div>
 <div class="puzzle-hud" aria-live="polite"><b id="shardCounter">SHARDS 0 / 3</b><span id="puzzleHint">Collect the glowing shards, activate circuit switches, and reach the portal.</span></div>
 </section><aside class="side">
@@ -244,7 +245,8 @@ const W=960,H=540,keys={left:false,right:false},players=new Map();
 const colors=['#39ff72','#bfff4f','#ff8e3c','#8fe6ac','#e4ffd0'];
 let me='solo',socket=null,socketReady=false,host=false,ownerId=null,roomCode='';
 let remoteStates=Object.create(null),lastSend=0,won=false,reconnectTimer=null,advanceTimer=null;
-let currentLevel=0,currentSeed=0,cameraX=0,checkpointX=65;
+let currentLevel=0,currentSeed=0,cameraX=0,dashFrames=0,dashCooldownUntil=0,facing=1;
+let portalReady=Object.create(null);
 const levelTemplates=[
 {name:'THE SPLIT',goal:{x:875,y:385,w:42,h:70},platforms:[
 {x:0,y:470,w:245,h:70,type:'solid'},{x:300,y:425,w:145,h:22,type:'quantum'},
@@ -287,16 +289,19 @@ function extendLevel(base,index){
     goal:{...base.goal},
     platforms:base.platforms.map(p=>({...p})),
     shards:base.shards.map(s=>({...s})),
-    switches:base.switches.map(s=>({...s}))
+    switches:base.switches.map(s=>({...s})),
+    hazards:(base.hazards||[]).map(v=>({...v}))
   };
   const routeY=[425,395,365,410,380,350,405,430,390,360,410,380,420,400];
   for(let i=0;i<routeY.length;i++){
     const x=980+i*132;
     const y=routeY[(i+index*2)%routeY.length];
-    const type=(i===7||i===11)?'gate':((i+index)%3===0?'solid':'quantum');
+    const type=(i===7||i===11)?'gate':((i===4||i===9)?'boost':((i+index)%3===0?'solid':'quantum'));
     const w=100+((i+index)%3)*5;
-    spec.platforms.push({x,y,w,h:18,type});
+    const platform={x,y,w,h:18,type};
+    spec.platforms.push(platform);
     if(i%2===1)spec.shards.push({x:x+w/2,y:y-25});
+    if(i===2||i===6||i===10)spec.hazards.push({x:x+w/2-11,baseX:x+w/2-11,y:y-20,w:22,h:26,range:28,phase:i*1.17});
   }
   const switchPlatform=spec.platforms[12];
   spec.switches.push({x:switchPlatform.x+switchPlatform.w/2,y:switchPlatform.y-30,label:'LONG-RUN CIRCUIT'});
@@ -305,7 +310,7 @@ function extendLevel(base,index){
   return spec;
 }
 levelTemplates.forEach((spec,index)=>{levelTemplates[index]=extendLevel(spec,index)});
-const world={gravity:.62,friction:.82,width:3200,goal:{x:875,y:385,w:42,h:70},platforms:[],shards:[],switches:[],gateOpen:false};
+const world={gravity:.62,friction:.82,width:3200,goal:{x:875,y:385,w:42,h:70},platforms:[],shards:[],switches:[],hazards:[],gateOpen:false};
 const mePlayer={id:me,name:'Exploding Fork',x:65,y:410,vx:0,vy:0,w:30,h:42,color:colors[1],ground:false};
 players.set(me,mePlayer);
 
@@ -349,11 +354,12 @@ function loadLevel(index,seed){
   currentSeed=(seed>>>0)||0;
   if(advanceTimer){window.clearTimeout(advanceTimer);advanceTimer=null}
   const spec=currentLevel===6?extendLevel(randomLevelData(currentSeed),6):levelTemplates[currentLevel];
-  cameraX=0;checkpointX=65;
+  cameraX=0;dashFrames=0;dashCooldownUntil=0;portalReady=Object.create(null);
   world.goal={...spec.goal};
   world.platforms=spec.platforms.map(p=>({...p}));
   world.shards=spec.shards.map(s=>({...s,collected:false}));
   world.switches=spec.switches.map(s=>({...s,active:false}));
+  world.hazards=(spec.hazards||[]).map(v=>({...v}));
   world.gateOpen=world.switches.length===0;
   won=false;keys.left=false;keys.right=false;
   mePlayer.x=65;mePlayer.y=410;mePlayer.vx=0;mePlayer.vy=0;mePlayer.ground=false;
@@ -405,6 +411,40 @@ function applyPuzzleAction(){
   updateLevelUi();
   setGameStatus('CIRCUIT OPEN // BRIDGE ENABLED');
 }
+function resetRunToStart(reason){
+  if(advanceTimer){window.clearTimeout(advanceTimer);advanceTimer=null}
+  won=false;portalReady=Object.create(null);dashFrames=0;cameraX=0;
+  world.shards.forEach(s=>{s.collected=false});
+  world.switches.forEach(s=>{s.active=false});
+  world.gateOpen=world.switches.length===0;
+  let spawn=0;
+  players.forEach((player,id)=>{
+    player.x=65+spawn*34;player.y=410;player.vx=0;player.vy=0;player.ground=false;
+    player.dashFrames=0;
+    if(id!==me)remoteStates[id]={...(remoteStates[id]||{}),id,x:player.x,y:player.y,name:player.name,color:player.color};
+    spawn++;
+  });
+  delete remoteStates[me];
+  updateLevelUi();
+  setGameStatus(reason||'CREW WIPE // EVERYONE BACK AT START');
+}
+function playerDied(reason){
+  resetRunToStart(reason||'CREW WIPE // EVERYONE BACK AT START');
+  if(roomCode)sendWhenReady({type:'party_wipe',reason:'A crew member fell or hit a hazard'});
+}
+function updateHazards(){
+  const t=Date.now()/430;
+  world.hazards.forEach(h=>{h.x=h.baseX+Math.sin(t+(h.phase||0))*(h.range||0)});
+}
+function touchingHazard(p){
+  return world.hazards.some(h=>p.x+p.w>h.x+3&&p.x<h.x+h.w-3&&p.y+p.h>h.y+3&&p.y<h.y+h.h);
+}
+function useDash(){
+  if(portalReady[me])return;
+  if(Date.now()<dashCooldownUntil){setGameStatus('DASH RECHARGING…');return}
+  dashFrames=11;dashCooldownUntil=Date.now()+1100;mePlayer.vx=facing*12.5;
+  setGameStatus('QUANTUM DASH!');
+}
 
 function setNetworkStatus(message){document.querySelectorAll('[data-network-status]').forEach(el=>{el.textContent=message})}
 function setGameStatus(message){document.getElementById('gameStatus').textContent=message}
@@ -430,11 +470,20 @@ function render(){
   ctx.save();ctx.translate(-cameraX,0);
   world.platforms.forEach(p=>{
     if(p.type==='gate'&&!world.gateOpen){ctx.fillStyle='#32191a';ctx.strokeStyle='#ff8e3c';ctx.shadowColor='#ff8e3c';}
+    else if(p.type==='boost'){ctx.fillStyle='#2c250b';ctx.strokeStyle='#ffd166';ctx.shadowColor='#ffd166';}
     else{const q=p.type==='quantum';ctx.fillStyle=q?'#0b2c16':'#14211a';ctx.strokeStyle=q?'#39ff72':'#285535';ctx.shadowColor=q?'#39ff72':'transparent'}
-    ctx.lineWidth=2;ctx.shadowBlur=p.type==='gate'&&!world.gateOpen?12:(p.type==='quantum'?15:0);
+    ctx.lineWidth=2;ctx.shadowBlur=p.type==='gate'&&!world.gateOpen?12:((p.type==='quantum'||p.type==='boost')?15:0);
     ctx.beginPath();ctx.roundRect(p.x,p.y,p.w,p.h,6);ctx.fill();ctx.stroke();ctx.shadowBlur=0;
     if(p.type==='gate'&&!world.gateOpen){ctx.strokeStyle='#ff8e3c';ctx.beginPath();for(let x=p.x+8;x<p.x+p.w;x+=18){ctx.moveTo(x,p.y+2);ctx.lineTo(x,p.y+p.h-2)}ctx.stroke()}
     else if(p.type==='quantum'){ctx.fillStyle='#39ff72';ctx.fillRect(p.x+10,p.y+4,Math.max(0,p.w-20),2)}
+    else if(p.type==='boost'){ctx.fillStyle='#ffd166';ctx.beginPath();ctx.moveTo(p.x+12,p.y+13);ctx.lineTo(p.x+p.w/2,p.y+3);ctx.lineTo(p.x+p.w-12,p.y+13);ctx.stroke()}
+  });
+  world.hazards.forEach(h=>{
+    ctx.save();ctx.fillStyle='#ff5b53';ctx.strokeStyle='#ffb0a8';ctx.shadowColor='#ff4d45';ctx.shadowBlur=12;ctx.beginPath();
+    const teeth=Math.max(2,Math.floor(h.w/8));
+    ctx.moveTo(h.x,h.y+h.h);
+    for(let i=0;i<teeth;i++){const x=h.x+i*h.w/teeth;ctx.lineTo(x+h.w/teeth*.5,h.y);ctx.lineTo(x+h.w/teeth,h.y+h.h)}
+    ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
   });
   world.shards.forEach(s=>{if(s.collected)return;ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Math.PI/4);ctx.fillStyle='#bfff4f';ctx.shadowColor='#39ff72';ctx.shadowBlur=16;ctx.fillRect(-7,-7,14,14);ctx.restore()});
   world.switches.forEach(s=>{ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,13,0,Math.PI*2);ctx.fillStyle=s.active?'#39ff72':'#ff8e3c';ctx.shadowColor=s.active?'#39ff72':'#ff8e3c';ctx.shadowBlur=17;ctx.fill();ctx.shadowBlur=0;text(s.active?'ON':'E',s.x,s.y+4,10,'#020b05','center');ctx.restore()});
@@ -444,13 +493,22 @@ function render(){
   if(won){ctx.fillStyle='#020b05dd';ctx.fillRect(0,0,W,H);text('LEVEL CLEARED!',W/2,220,42,'#39ff72','center');text('Puzzle solved. Crew synchronized.',W/2,265,20,'#e0ffe8','center');text('NEXT LEVEL LOADING AUTOMATICALLY…',W/2,305,15,'#bdebc9','center')}
   requestAnimationFrame(render);
 }
-function collide(p){p.ground=false;for(const b of world.platforms){if(b.type==='gate'&&!world.gateOpen)continue;if(p.vy>=0&&p.x+p.w>b.x&&p.x<b.x+b.w&&p.y+p.h>=b.y&&p.y+p.h-p.vy<=b.y){p.y=b.y-p.h;p.vy=0;p.ground=true}}}
+function collide(p){p.ground=false;for(const b of world.platforms){if(b.type==='gate'&&!world.gateOpen)continue;if(p.vy>=0&&p.x+p.w>b.x&&p.x<b.x+b.w&&p.y+p.h>=b.y&&p.y+p.h-p.vy<=b.y){p.y=b.y-p.h;if(b.type==='boost'){p.vy=-15;p.ground=false}else{p.vy=0;p.ground=true}}}}
 function atPortal(p){const g=world.goal;return p.x+p.w>g.x&&p.x<g.x+g.w&&p.y+p.h>g.y&&p.y<g.y+g.h}
 function update(){
-  const p=mePlayer,ax=(keys.right?1:0)-(keys.left?1:0);p.vx+=ax*.7;p.vx=Math.max(-5.2,Math.min(5.2,p.vx));if(!ax)p.vx*=world.friction;
-  p.x+=p.vx;p.vy=Math.min(12,p.vy+world.gravity);p.y+=p.vy;collide(p);p.x=Math.max(0,Math.min(world.width-p.w,p.x));
-  if(p.ground&&p.x>checkpointX+350)checkpointX=p.x;
-  if(p.y>H+80){p.x=checkpointX;p.y=400;p.vx=0;p.vy=0}
+  updateHazards();
+  const p=mePlayer;
+  if(portalReady[me]){
+    p.x=world.goal.x+6;p.y=world.goal.y+world.goal.h-p.h;p.vx=0;p.vy=0;p.ground=true;
+  }else{
+    const ax=(keys.right?1:0)-(keys.left?1:0);
+    if(ax)facing=ax;
+    if(dashFrames>0){p.vx=facing*12.5;dashFrames--}
+    else{p.vx+=ax*.7;p.vx=Math.max(-5.2,Math.min(5.2,p.vx));if(!ax)p.vx*=world.friction}
+    p.x+=p.vx;p.vy=Math.min(12,p.vy+world.gravity);p.y+=p.vy;collide(p);p.x=Math.max(0,Math.min(world.width-p.w,p.x));
+    if(p.y>H+80){playerDied('CREW WIPE // FALL DETECTED — BACK TO START')}
+    else if(touchingHazard(p)){playerDied('CREW WIPE // HAZARD HIT — BACK TO START')}
+  }
   for(const [id,r] of Object.entries(remoteStates)){const q=players.get(id);if(q){q.x=r.x;q.y=r.y;q.name=r.name||q.name||'Fork buddy';q.color=r.color||q.color}}
   for(const shard of world.shards){
     if(shard.collected)continue;
@@ -458,13 +516,19 @@ function update(){
       if(Math.hypot((player.x+player.w/2)-shard.x,(player.y+player.h/2)-shard.y)<26){shard.collected=true;updateLevelUi();break}
     }
   }
-  const at=atPortal(p),teamReady=[...players.values()].every(atPortal);
+  const at=atPortal(p);
   const shardsReady=world.shards.every(s=>s.collected),switchesReady=world.switches.every(s=>s.active);
+  if(shardsReady&&switchesReady&&at&&!portalReady[me]){
+    portalReady[me]=true;p.x=world.goal.x+6;p.y=world.goal.y+world.goal.h-p.h;p.vx=0;p.vy=0;
+    setGameStatus('PORTAL ENTERED // WAIT FOR CREW');
+    if(roomCode)sendWhenReady({type:'portal_entered'});
+  }
+  const teamReady=[...players.keys()].every(id=>Boolean(portalReady[id]));
   if(!won){
     if(!shardsReady)setGameStatus(at?'PORTAL LOCKED // FIND SHARDS':'COLLECT FORK SHARDS');
     else if(!switchesReady)setGameStatus('FIND SWITCH // PRESS E / PULSE');
-    else if(at&&!teamReady)setGameStatus('WAITING FOR PARTY…');
-    else if(at&&teamReady){
+    else if(portalReady[me]&&!teamReady)setGameStatus('PORTAL LOCKED IN // WAITING FOR ALL CREW ('+Object.keys(portalReady).filter(id=>portalReady[id]).length+'/'+players.size+')');
+    else if(portalReady[me]&&teamReady){
       won=true;setGameStatus('LEVEL CLEARED! NEXT LEVEL LOADING…');
       if((!roomCode||host)&&!advanceTimer){
         const clearedLevel=currentLevel;
@@ -507,7 +571,7 @@ function updatePartyControls(){
   }
 }
 function setSoloState(){
-  me='solo';ownerId=null;host=false;roomCode='';remoteStates=Object.create(null);
+  me='solo';ownerId=null;host=false;roomCode='';remoteStates=Object.create(null);portalReady=Object.create(null);
   mePlayer.id=me;mePlayer.name='Exploding Fork';mePlayer.color=colors[1];mePlayer.x=65;mePlayer.y=410;mePlayer.vx=0;mePlayer.vy=0;
   players.clear();players.set(me,mePlayer);document.getElementById('partyCode').textContent='------';roster();
 }
@@ -536,6 +600,20 @@ function handleServerMessage(m){
   }
   if(m.type==='level_changed'){
     if(m.code&&m.code===roomCode){loadLevel(Number.isInteger(m.level)?m.level:0,Number.isInteger(m.seed)?m.seed:0);setGameStatus('LEVEL SYNCHRONIZED BY PARTY LEADER')}
+    return;
+  }
+  if(m.type==='portal_progress'&&m.code===roomCode){
+    portalReady=Object.create(null);
+    if(Array.isArray(m.readyPlayerIds))m.readyPlayerIds.forEach(id=>{portalReady[id]=true});
+    return;
+  }
+  if(m.type==='party_wiped'&&m.code===roomCode){
+    resetRunToStart('CREW WIPE // EVERYONE BACK AT START');
+    if(Array.isArray(m.players))m.players.forEach(item=>{
+      const player=players.get(item.id);if(!player)return;
+      player.x=item.x;player.y=item.y;player.vx=0;player.vy=0;
+      if(item.id!==me)remoteStates[item.id]={...item};
+    });
     return;
   }
   if(m.type==='puzzle_action'){
@@ -603,6 +681,8 @@ function bindHold(id,key){const b=document.getElementById(id),on=e=>{e.preventDe
 bindHold('leftBtn','left');bindHold('rightBtn','right');
 document.getElementById('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(mePlayer.ground)mePlayer.vy=-12});
 document.getElementById('returnLobbyBtn').addEventListener('click',()=>showScreen(roomCode?'partyLobby':'lobbyHome'));
+document.getElementById('dashBtn').addEventListener('click',useDash);
+window.addEventListener('keydown',e=>{if(e.target instanceof HTMLElement&&e.target.matches('input,textarea,select'))return;if((e.key==='Shift'||e.key.toLowerCase()==='x')&&!e.repeat){e.preventDefault();useDash()}});
 document.getElementById('fullscreenBtn').addEventListener('click',async()=>{
   try{
     if(document.fullscreenElement){await document.exitFullscreen()}
