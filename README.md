@@ -43,7 +43,8 @@ The landing page follows the Exploding-fork repo's dark terminal-green style, wi
 - **Move left:** A or ←
 - **Move right:** D or →
 - **Jump:** W, ↑, or Space
-- **On every device:** left and right arrow buttons stay visible below the game, on the left; the jump button stays on the right. Keyboard controls also work on desktop.
+- **On every device:** oversized left and right buttons sit on the lower left; the larger jump button sits on the lower right. Touch holds use pointer capture, and jump input is buffered briefly so a press just before landing still jumps.
+- **Mobile zoom:** double-tap zoom is disabled while playing; game buttons use touch-safe input handling.
 - **Long scrolling levels:** each designed stage and random layout stretches across a wider world with a camera that follows you.
 - **Automatic progression:** after the shard/switch puzzle is solved and the whole party reaches the portal, the next stage loads automatically. The host advances the multiplayer party.
 - **Fullscreen display:** gameplay fills the entire viewport; use **⛶ FULLSCREEN** to request browser fullscreen as well.
