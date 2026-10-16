@@ -695,8 +695,6 @@ function bindHold(id,key){
 }
 bindHold('leftBtn','left');bindHold('rightBtn','right');
 document.getElementById('jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();queueJump()});
-window.addEventListener('pointerup',()=>{keys.left=false;keys.right=false});
-window.addEventListener('pointercancel',()=>{keys.left=false;keys.right=false});
 document.addEventListener('dblclick',e=>{e.preventDefault()},{passive:false});
 document.addEventListener('contextmenu',e=>{if(document.getElementById('gameLayout').classList.contains('active'))e.preventDefault()});
 document.getElementById('returnLobbyBtn').addEventListener('click',()=>showScreen(roomCode?'partyLobby':'lobbyHome'));
