@@ -5,7 +5,7 @@
 <title>Exploding Fork — Fork Park</title>
 <style>
 :root{--bg:#090d20;--panel:#111a35;--cyan:#5df4ff;--pink:#ff5ca8;--lime:#c7ff65;--text:#f4f7ff}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1a2550 0%,#090d20 65%);color:var(--text);font:16px system-ui,Segoe UI,sans-serif;min-height:100vh}button,input{font:inherit}button{border:1px solid #52648d;background:#1a2850;color:white;border-radius:12px;padding:10px 14px;font-weight:750;cursor:pointer}button:hover{filter:brightness(1.2)}button:disabled{opacity:.45;cursor:default}.wrap{max-width:1100px;margin:auto;padding:18px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.logo{font-weight:1000;font-size:clamp(23px,4vw,38px);letter-spacing:-1.5px}.logo span{color:var(--cyan);text-shadow:0 0 20px #5df4ff55}.sub{color:#a8b7dc;font-size:13px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 275px;gap:14px;margin-top:16px}.gamebox,.panel{border:1px solid #34446f;background:#0d1530dd;border-radius:18px;overflow:hidden;box-shadow:0 18px 60px #0005}.gamehead{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;border-bottom:1px solid #29395f;gap:8px}.status{font-size:12px;color:var(--lime)}canvas{width:100%;display:block;aspect-ratio:16/9;background:#19080f;touch-action:none}.side{display:flex;flex-direction:column;gap:14px}.panel{padding:15px}.panel h3{margin:0 0 10px;font-size:16px}.panel p{font-size:13px;color:#b6c3e3;line-height:1.5;margin:8px 0}.partyrow{display:flex;gap:7px}.partyrow input{min-width:0;width:100%;background:#080f25;color:white;border:1px solid #455681;border-radius:10px;padding:10px}.partycode{font-size:22px;letter-spacing:3px;color:var(--cyan);font-weight:900;margin:8px 0}.players{display:grid;gap:7px}.player{font-size:13px;padding:8px 10px;background:#172344;border-radius:9px;display:flex;justify-content:space-between}.pill{font-size:11px;color:#aebde4}.hint{font-size:12px!important}.touch{display:none;justify-content:space-between;align-items:center;padding:12px;gap:10px;background:#16070d}.move{display:flex;gap:10px}.touch button{height:62px;min-width:68px;font-size:25px;touch-action:none;user-select:none}.touch .jump{min-width:96px;background:#25385e;border-color:var(--cyan);font-size:16px}.bottom{color:#8999c3;font-size:12px;text-align:center;padding:15px}@media(max-width:760px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.side .panel:first-child{grid-column:1/-1}.touch{display:flex}.wrap{padding:10px}.gamehead{padding:10px}.sub{display:none}}@media(max-width:420px){.side{grid-template-columns:1fr}.side .panel:first-child{grid-column:auto}}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1a2550 0%,#090d20 65%);color:var(--text);font:16px system-ui,Segoe UI,sans-serif;min-height:100vh}button,input{font:inherit}button{border:1px solid #52648d;background:#1a2850;color:white;border-radius:12px;padding:10px 14px;font-weight:750;cursor:pointer}button:hover{filter:brightness(1.2)}button:disabled{opacity:.45;cursor:default}.wrap{max-width:1100px;margin:auto;padding:18px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.logo{font-weight:1000;font-size:clamp(23px,4vw,38px);letter-spacing:-1.5px}.logo span{color:var(--cyan);text-shadow:0 0 20px #5df4ff55}.sub{color:#a8b7dc;font-size:13px}.layout{display:grid;grid-tembutton-columns:minmax(0,1fr) 275px;gap:14px;margin-top:16px}.gamebox,.panel{border:1px solid #34446f;background:#0d1530dd;border-radius:18px;overflow:hidden;box-shadow:0 18px 60px #0005}.gamehead{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;border-bottom:1px solid #29395f;gap:8px}.status{font-size:12px;color:var(--lime)}canvas{width:100%;display:block;aspect-ratio:16/9;background:#19080f;touch-action:none}.side{display:flex;flex-direction:column;gap:14px}.panel{padding:15px}.panel h3{margin:0 0 10px;font-size:16px}.panel p{font-size:13px;color:#b6c3e3;line-height:1.5;margin:8px 0}.partyrow{display:flex;gap:7px}.partyrow input{min-width:0;width:100%;background:#080f25;color:white;border:1px solid #455681;border-radius:10px;padding:10px}.partycode{font-size:22px;letter-spacing:3px;color:var(--cyan);font-weight:900;margin:8px 0}.players{display:grid;gap:7px}.player{font-size:13px;padding:8px 10px;background:#172344;border-radius:9px;display:flex;justify-content:space-between}.pill{font-size:11px;color:#aebde4}.hint{font-size:12px!important}.touch{display:none;justify-content:space-between;align-items:center;padding:12px;gap:10px;background:#16070d}.move{display:flex;gap:10px}.touch button{height:62px;min-width:68px;font-size:25px;touch-action:none;user-select:none}.touch .jump{min-width:96px;background:#25385e;border-color:var(--cyan);font-size:16px}.bottom{color:#8999c3;font-size:12px;text-align:center;padding:15px}@media(max-width:760px){.layout{grid-tembutton-columns:1fr}.side{display:grid;grid-tembutton-columns:1fr 1fr}.side .panel:first-child{grid-column:1/-1}.touch{display:flex}.wrap{padding:10px}.gamehead{padding:10px}.sub{display:none}}@media(max-width:420px){.side{grid-tembutton-columns:1fr}.side .panel:first-child{grid-column:auto}}
 
 /* Exploding Fork lobby theme */
 :root{--bg:#160b13;--panel:#27111a;--cyan:#ff9a43;--pink:#ff4b35;--lime:#ffd65a;--text:#fff4e9}
@@ -14,7 +14,7 @@ body{background:radial-gradient(ellipse at 15% 0%,#692213 0%,#25101a 46%,#0c0915
 .sub{color:#f5b59a}
 button{background:#341923;border-color:#a94730}
 button:hover{filter:brightness(1.18);transform:translateY(-1px)}
-.lobby-screen{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:18px;margin-top:22px;align-items:stretch}
+.lobby-screen{display:grid;grid-tembutton-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:18px;margin-top:22px;align-items:stretch}
 .lobby-hero,.lobby-card{position:relative;overflow:hidden;border:1px solid #753126;border-radius:24px;background:linear-gradient(145deg,#32121bdf,#140d19f2);box-shadow:0 22px 70px #0007}
 .lobby-hero{min-height:430px;padding:clamp(22px,4vw,42px);display:flex;flex-direction:column;justify-content:center}
 .lobby-hero:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 24%,#ff733328 0 2px,transparent 3px),radial-gradient(circle at 69% 36%,#ffc45b22 0 3px,transparent 4px),radial-gradient(circle at 92% 55%,#ff533822 0 4px,transparent 5px);background-size:53px 59px,71px 67px,89px 93px;pointer-events:none}
@@ -35,7 +35,7 @@ button:hover{filter:brightness(1.18);transform:translateY(-1px)}
 .partycode{font-size:25px;color:#ffd65a;letter-spacing:5px;background:#130d16;border:1px dashed #975033;border-radius:13px;padding:13px 14px;text-align:center}
 .partyrow input{background:#100c16;border-color:#754032;min-height:44px;text-transform:uppercase;letter-spacing:2px}
 .lobby-status{font-size:12px!important;color:#ffc08d!important;background:#170d16;border:1px solid #512b2b;border-radius:10px;padding:10px 12px;margin:0!important;overflow-wrap:anywhere}
-.lobby-roster{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.lobby-roster{display:grid;grid-tembutton-columns:1fr 1fr;gap:7px}
 .lobby-roster .player{background:#24131d;border:1px solid #45232b;border-radius:10px;gap:6px}
 .lobby-roster .player span:first-child{overflow-wrap:anywhere}
 .lobby-enter{margin-top:auto;min-height:54px;font-size:15px;letter-spacing:1px}
@@ -48,9 +48,9 @@ button:hover{filter:brightness(1.18);transform:translateY(-1px)}
 .touch .jump{min-width:106px;background:linear-gradient(135deg,#ff6a3d,#d8342d);border-color:#ff9b59;font-size:14px;letter-spacing:1px}
 .move{display:flex;gap:10px}
 button:focus-visible,input:focus-visible{outline:3px solid #ffd65a;outline-offset:3px}
-@media(max-width:820px){.lobby-screen{grid-template-columns:1fr}.lobby-hero{min-height:330px}.lobby-title{font-size:clamp(42px,12vw,70px)}}
-@media(max-width:520px){.lobby-hero{min-height:unset;padding:22px}.lobby-card{padding:18px}.fork-mascot{width:70px;height:70px;font-size:40px}.lobby-roster{grid-template-columns:1fr}.wrap{padding:10px}.top{gap:8px}.pill{font-size:10px}}
-@media(min-width:821px){.lobby-screen{grid-template-columns:minmax(0,1.1fr) minmax(330px,.9fr)}}
+@media(max-width:820px){.lobby-screen{grid-tembutton-columns:1fr}.lobby-hero{min-height:330px}.lobby-title{font-size:clamp(42px,12vw,70px)}}
+@media(max-width:520px){.lobby-hero{min-height:unset;padding:22px}.lobby-card{padding:18px}.fork-mascot{width:70px;height:70px;font-size:40px}.lobby-roster{grid-tembutton-columns:1fr}.wrap{padding:10px}.top{gap:8px}.pill{font-size:10px}}
+@media(min-width:821px){.lobby-screen{grid-tembutton-columns:minmax(0,1.1fr) minmax(330px,.9fr)}}
 
 
 /* Exploding-fork repo visual language: terminal green, bordered screens, compact nav */
@@ -117,10 +117,10 @@ button.secondary{background:#100609;border-color:#7a2030;color:#ff8a99}
 .level-toolbar{display:flex;flex-wrap:wrap;gap:7px;padding:10px;background:#100609;border-top:1px solid var(--line)}
 .level-toolbar button{flex:1 1 120px;font-size:11px;min-height:40px;padding:8px}
 .level-toolbar #actionBtn{border-color:#ffd166;color:#ffe3a1}
-.puzzle-hud{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:12px 14px;background:#1b080e;border-top:1px dashed #7a2030;font-size:11px;line-height:1.55}
+.puzzle-hud{display:grid;grid-tembutton-columns:auto 1fr;gap:12px;align-items:start;padding:12px 14px;background:#1b080e;border-top:1px dashed #7a2030;font-size:11px;line-height:1.55}
 #shardCounter{color:var(--green);white-space:nowrap;font-weight:900}
 #puzzleHint{color:#ffb7c0;overflow-wrap:anywhere}
-@media(max-width:560px){.level-toolbar button{flex:1 1 28%;min-width:90px}.puzzle-hud{grid-template-columns:1fr;gap:4px}}
+@media(max-width:560px){.level-toolbar button{flex:1 1 28%;min-width:90px}.puzzle-hud{grid-tembutton-columns:1fr;gap:4px}}
 
 /* Full-screen, edge-to-edge gameplay with the controls floating over the world */
 #gameLayout.active{display:block!important;position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:1000;margin:0;padding:0;overflow:hidden;background:#0d0307}
@@ -135,9 +135,9 @@ button.secondary{background:#100609;border-color:#7a2030;color:#ff8a99}
 #gameLayout.active .touch .move{gap:9px}
 #gameLayout.active .touch button{pointer-events:auto;min-width:64px;height:58px;padding:8px 13px;background:#100609df;border:1px solid #ff354f;color:#ff354f;box-shadow:0 0 16px #ff354f20;backdrop-filter:blur(8px)}
 #gameLayout.active .touch .jump{min-width:94px;background:#073016ed;border-color:#ff354f;color:#ffd5da;font-size:13px}
-#gameLayout.active .level-toolbar{position:absolute;z-index:24;top:96px;right:12px;width:min(450px,52vw);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:7px;background:#0d0307c9;border:1px solid #7a2030;backdrop-filter:blur(8px)}
+#gameLayout.active .level-toolbar{position:absolute;z-index:24;top:96px;right:12px;width:min(450px,52vw);display:grid;grid-tembutton-columns:repeat(3,minmax(0,1fr));gap:6px;padding:7px;background:#0d0307c9;border:1px solid #7a2030;backdrop-filter:blur(8px)}
 #gameLayout.active .level-toolbar button{min-width:0;min-height:35px;padding:7px 5px;font-size:10px}
-#gameLayout.active .puzzle-hud{position:absolute;z-index:23;top:58px;left:12px;width:min(420px,45vw);display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px 12px;background:#0d0307c9;border:1px solid #7a2030;backdrop-filter:blur(8px)}
+#gameLayout.active .puzzle-hud{position:absolute;z-index:23;top:58px;left:12px;width:min(420px,45vw);display:grid;grid-tembutton-columns:auto 1fr;gap:10px;padding:10px 12px;background:#0d0307c9;border:1px solid #7a2030;backdrop-filter:blur(8px)}
 #gameLayout.active .small-button{background:#100609df;color:#ff354f;border-color:#7a2030;border-radius:3px}
 #gameLayout.active .touch button{transition:transform .09s ease,background .12s ease,box-shadow .12s ease}
 #gameLayout.active .touch button:active{transform:scale(.94);background:#0b4b22;box-shadow:0 0 24px #ff354f66}
@@ -152,8 +152,8 @@ body:has(#gameLayout.active){overflow:hidden;touch-action:manipulation}
   #gameLayout.active .gamehead-left strong{max-width:38vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #gameLayout.active .small-button{padding:6px;font-size:9px}
   #gameLayout.active .gamehead .status{max-width:35vw;overflow-wrap:anywhere}
-  #gameLayout.active .puzzle-hud{top:58px;left:8px;right:8px;width:auto;grid-template-columns:auto 1fr;gap:8px;padding:8px;font-size:10px}
-  #gameLayout.active .level-toolbar{top:126px;left:8px;right:8px;width:auto;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:6px}
+  #gameLayout.active .puzzle-hud{top:58px;left:8px;right:8px;width:auto;grid-tembutton-columns:auto 1fr;gap:8px;padding:8px;font-size:10px}
+  #gameLayout.active .level-toolbar{top:126px;left:8px;right:8px;width:auto;grid-tembutton-columns:repeat(3,minmax(0,1fr));gap:5px;padding:6px}
   #gameLayout.active .level-toolbar button{min-height:34px;font-size:9px}
   #gameLayout.active .touch{left:10px;right:10px;bottom:max(14px,env(safe-area-inset-bottom));align-items:flex-end}
   #gameLayout.active .touch .move{gap:12px}
@@ -277,7 +277,7 @@ button.secondary{background:#16070d;border-color:#7a2030;color:#ff8a99}
 </div>
 <div class="puzzle-hud" aria-live="polite"><b id="shardCounter">SHARDS 0 / 3</b><span id="puzzleHint">Collect the glowing shards, activate circuit switches, and reach the portal.</span></div>
 </section><aside class="side">
-<section class="panel"><h3>🎮 Controls</h3><p><b>Move:</b> A / D or ← / →</p><p><b>Jump:</b> W, ↑, or Space</p><p><b>Switches:</b> get close to a circuit switch and it activates automatically.</p><p><b>Level buttons:</b> PREV / NEXT switch designed stages; RANDOM builds a seeded layout. In parties, the leader chooses the level.</p><p><b>Puzzles:</b> collect all 3 fork shards, activate any switch, then get every crew member through the portal.</p><p><b>Mobile:</b> large movement and jump controls stay on screen.</p></section></aside></div>
+<section class="panel"><h3>🎮 Controls</h3><p><b>Move:</b> A / D or ← / →</p><p><b>Jump:</b> W, ↑, or Space</p><p><b>Switches:</b> get close to a circuit switch and it activates automatically.</p><p><b>Level buttons:</b> PREV / NEXT switch designed stages; RANDOM builds a seeded layout. In parties, the leader chooses the level.</p><p><b>Puzzles:</b> collect the shards, activate switches, and stand on floor buttons together to open gates.</p><p><b>Co-op trick:</b> jump onto a buddy's head to make a human ladder and reach higher platforms.</p></section></aside></div>
 <div class="bottom">EXPLODING FORK // KEEP YOUR CREW TOGETHER.</div>
 </main>
 <script>
@@ -297,7 +297,7 @@ let me='solo',socket=null,socketReady=false,host=false,ownerId=null,roomCode='';
 let remoteStates=Object.create(null),lastSend=0,won=false,reconnectTimer=null,advanceTimer=null;
 let currentLevel=0,currentSeed=0,cameraX=0,jumpBufferUntil=0;
 let portalReady=Object.create(null);
-const levelTemplates=[
+const levelTembuttons=[
 {name:'THE SPLIT',goal:{x:875,y:385,w:42,h:70},platforms:[
 {x:0,y:470,w:245,h:70,type:'solid'},{x:300,y:425,w:145,h:22,type:'quantum'},
 {x:495,y:375,w:125,h:22,type:'solid'},{x:665,y:430,w:115,h:22,type:'quantum'},
@@ -308,12 +308,12 @@ const levelTemplates=[
 {x:370,y:370,w:105,h:18,type:'solid'},{x:510,y:415,w:105,h:18,type:'quantum'},
 {x:645,y:350,w:110,h:18,type:'solid'},{x:810,y:455,w:150,h:85,type:'solid'}],
 shards:[{x:270,y:390},{x:410,y:340},{x:690,y:320}],switches:[]},
-{name:'SWITCHBACK',goal:{x:875,y:385,w:42,h:70},plates:[{x:360,y:360,w:40,h:20,label:'CREW PLATE'}],platforms:[
+{name:'SWITCHBACK',goal:{x:875,y:385,w:42,h:70},buttons:[{x:360,y:360,w:40,h:20,label:'CREW PLATE'}],platforms:[
 {x:0,y:470,w:190,h:70,type:'solid'},{x:215,y:420,w:100,h:18,type:'quantum'},
 {x:350,y:380,w:120,h:18,type:'solid'},{x:495,y:420,w:95,h:18,type:'quantum'},
 {x:610,y:365,w:100,h:16,type:'gate'},{x:760,y:440,w:200,h:100,type:'solid'}],
 shards:[{x:255,y:390},{x:390,y:350},{x:800,y:410}],switches:[{x:420,y:350,label:'BRIDGE SWITCH'}]},
-{name:'CRATE LAB',goal:{x:875,y:385,w:42,h:70},platforms:[
+{name:'CRATE LAB',goal:{x:875,y:385,w:42,h:70},buttons:[{x:265,y:388,w:42,h:12,label:'LIFT BUTTON A'},{x:665,y:408,w:42,h:12,label:'LIFT BUTTON B'}],platforms:[
 {x:0,y:470,w:210,h:70,type:'solid'},{x:245,y:400,w:90,h:18,type:'solid'},
 {x:365,y:445,w:105,h:18,type:'quantum'},{x:500,y:370,w:105,h:18,type:'solid'},
 {x:640,y:420,w:95,h:18,type:'gate'},{x:790,y:455,w:170,h:85,type:'solid'},
@@ -325,7 +325,7 @@ shards:[{x:275,y:370},{x:450,y:255},{x:680,y:390}],switches:[{x:545,y:340,label:
 {x:600,y:375,w:95,h:18,type:'quantum'},{x:715,y:420,w:90,h:18,type:'solid'},
 {x:825,y:455,w:135,h:85,type:'solid'}],
 shards:[{x:260,y:400},{x:510,y:280},{x:755,y:390}],switches:[]},
-{name:'FINAL PROTOCOL',goal:{x:875,y:385,w:42,h:70},platforms:[
+{name:'FINAL PROTOCOL',goal:{x:875,y:385,w:42,h:70},buttons:[{x:235,y:413,w:42,h:12,label:'SYNC BUTTON A'},{x:730,y:378,w:42,h:12,label:'SYNC BUTTON B'}],platforms:[
 {x:0,y:470,w:190,h:70,type:'solid'},{x:215,y:425,w:100,h:18,type:'quantum'},
 {x:345,y:360,w:95,h:18,type:'solid'},{x:470,y:410,w:95,h:18,type:'quantum'},
 {x:585,y:345,w:100,h:16,type:'gate'},{x:710,y:390,w:100,h:18,type:'solid'},
@@ -340,7 +340,7 @@ function extendLevel(base,index){
     platforms:base.platforms.map(p=>({...p})),
     shards:base.shards.map(s=>({...s})),
     switches:base.switches.map(s=>({...s})),
-    plates:(base.plates||[]).map(p=>({...p})),
+    buttons:(base.buttons||[]).map(p=>({...p})),
     hazards:(base.hazards||[]).map(v=>({...v}))
   };
   const routeY=[425,395,365,410,380,350,405,430,390,360,410,380,420,400];
@@ -356,12 +356,13 @@ function extendLevel(base,index){
   }
   const switchPlatform=spec.platforms[12];
   spec.switches.push({x:switchPlatform.x+switchPlatform.w/2,y:switchPlatform.y-30,label:'LONG-RUN CIRCUIT'});
+  spec.buttons.push({x:switchPlatform.x+12,y:switchPlatform.y-12,w:42,h:12,label:'LONG-RUN BUTTON'});
   spec.platforms.push({x:2840,y:455,w:360,h:85,type:'solid'});
   spec.goal={x:3025,y:385,w:42,h:70};
   return spec;
 }
-levelTemplates.forEach((spec,index)=>{levelTemplates[index]=extendLevel(spec,index)});
-const world={gravity:.62,friction:.82,width:3200,goal:{x:875,y:385,w:42,h:70},platforms:[],shards:[],switches:[],plates:[],hazards:[],gateOpen:false};
+levelTembuttons.forEach((spec,index)=>{levelTembuttons[index]=extendLevel(spec,index)});
+const world={gravity:.62,friction:.82,width:3200,goal:{x:875,y:385,w:42,h:70},platforms:[],shards:[],switches:[],buttons:[],hazards:[],gateOpen:false};
 const mePlayer={id:me,name:'Exploding Fork',x:65,y:410,vx:0,vy:0,w:30,h:42,color:colors[1],ground:false};
 players.set(me,mePlayer);
 
@@ -383,14 +384,14 @@ function randomLevelData(seed){
 }
 function updateLevelUi(){
   const label=document.getElementById('levelLabel');
-  if(label)label.textContent=currentLevel===6?'RANDOM // SEED '+String(currentSeed).padStart(10,'0'):'LEVEL '+String(currentLevel+1).padStart(2,'0')+' — '+levelTemplates[currentLevel].name;
+  if(label)label.textContent=currentLevel===6?'RANDOM // SEED '+String(currentSeed).padStart(10,'0'):'LEVEL '+String(currentLevel+1).padStart(2,'0')+' — '+levelTembuttons[currentLevel].name;
   const hint=document.getElementById('puzzleHint');
   const count=document.getElementById('shardCounter');
   if(count)count.textContent='SHARDS '+world.shards.filter(s=>s.collected).length+' / '+world.shards.length;
   if(hint){
     const left=world.shards.filter(s=>!s.collected).length;
     hint.textContent=left?'PUZZLE: collect '+left+' remaining glowing shard(s).':
-      (world.switches.some(s=>!s.active)?'PUZZLE: move close to the circuit switch to activate it.':(world.plates.some(p=>!p.occupied)?'CO-OP PUZZLE: one buddy must stand on the CREW PLATE to hold the gate open.':'PUZZLE COMPLETE: regroup at the portal.'));
+      (world.switches.some(s=>!s.active)?'PUZZLE: move close to the circuit switch to activate it.':(world.buttons.some(p=>!p.occupied)?'CO-OP PUZZLE: one buddy must stand on the CREW PLATE to hold the gate open.':'PUZZLE COMPLETE: regroup at the portal.'));
   }
   updateLevelControls();
 }
@@ -401,16 +402,16 @@ function updateLevelControls(){
   });
 }
 function loadLevel(index,seed){
-  currentLevel=index===6?6:Math.max(0,Math.min(levelTemplates.length-1,index|0));
+  currentLevel=index===6?6:Math.max(0,Math.min(levelTembuttons.length-1,index|0));
   currentSeed=(seed>>>0)||0;
   if(advanceTimer){window.clearTimeout(advanceTimer);advanceTimer=null}
-  const spec=currentLevel===6?extendLevel(randomLevelData(currentSeed),6):levelTemplates[currentLevel];
+  const spec=currentLevel===6?extendLevel(randomLevelData(currentSeed),6):levelTembuttons[currentLevel];
   cameraX=0;jumpBufferUntil=0;portalReady=Object.create(null);
   world.goal={...spec.goal};
   world.platforms=spec.platforms.map(p=>({...p}));
   world.shards=spec.shards.map(s=>({...s,collected:false}));
   world.switches=spec.switches.map(s=>({...s,active:false}));
-  world.plates=(spec.plates||[]).map(p=>({...p,occupied:false}));
+  world.buttons=(spec.buttons||[]).map(p=>({...p,occupied:false}));
   world.hazards=(spec.hazards||[]).map(v=>({...v}));
   world.gateOpen=world.switches.length===0;
   won=false;keys.left=false;keys.right=false;
@@ -439,7 +440,7 @@ function showPuzzleHint(){
   const left=world.shards.filter(s=>!s.collected).length;
   if(left){hint.textContent='HINT: look for '+left+' glowing green shard(s) on the platforms before entering the portal.';return}
   const switchObj=world.switches.find(s=>!s.active);
-  if(switchObj){hint.textContent='HINT: move close to the '+switchObj.label+' and get close to activate it and open the bridge.';return}
+  if(switchObj){hint.textContent='HINT: move close to the '+switchObj.label+' to activate it. Step on every floor button together; stack on a buddy for height.';return}
   hint.textContent='HINT: the puzzle is solved. Lead your whole crew into the glowing portal.';
 }
 function activateSwitch(automatic=false){
@@ -527,7 +528,7 @@ function render(){
     else if(p.type==='quantum'){ctx.fillStyle='#ff354f';ctx.fillRect(p.x+10,p.y+4,Math.max(0,p.w-20),2)}
     else if(p.type==='boost'){ctx.fillStyle='#ffd166';ctx.beginPath();ctx.moveTo(p.x+12,p.y+13);ctx.lineTo(p.x+p.w/2,p.y+3);ctx.lineTo(p.x+p.w-12,p.y+13);ctx.stroke()}
   });
-  world.plates.forEach(p=>{ctx.save();ctx.fillStyle=p.occupied?'#ff354f':'#ffd166';ctx.strokeStyle=p.occupied?'#baffc9':'#fff0a8';ctx.shadowColor=p.occupied?'#ff354f':'#ffd166';ctx.shadowBlur=p.occupied?18:9;ctx.fillRect(p.x,p.y,p.w,p.h);ctx.strokeRect(p.x,p.y,p.w,p.h);ctx.shadowBlur=0;text(p.occupied?'HOLD':'STAND',p.x+p.w/2,p.y-7,9,p.occupied?'#ff354f':'#ffd166','center');ctx.restore()});
+  world.buttons.forEach(button=>{ctx.save();ctx.fillStyle=button.occupied?'#ff354f':'#ffd166';ctx.strokeStyle=button.occupied?'#fff0f2':'#fff0a8';ctx.shadowColor=button.occupied?'#ff354f':'#ffd166';ctx.shadowBlur=button.occupied?18:9;ctx.fillRect(button.x,button.y,button.w,button.h);ctx.strokeRect(button.x,button.y,button.w,button.h);ctx.fillStyle=button.occupied?'#fff0f2':'#ff8e3c';ctx.fillRect(button.x+4,button.y+2,button.w-8,Math.max(2,button.h-4));ctx.shadowBlur=0;text(button.occupied?'ON':'STEP',button.x+button.w/2,button.y-7,9,button.occupied?'#ff354f':'#ffd166','center');ctx.restore()});
   world.hazards.forEach(h=>{
     ctx.save();ctx.fillStyle='#ff5b53';ctx.strokeStyle='#ffb0a8';ctx.shadowColor='#ff4d45';ctx.shadowBlur=12;ctx.beginPath();
     const teeth=Math.max(2,Math.floor(h.w/8));
@@ -536,14 +537,33 @@ function render(){
     ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
   });
   world.shards.forEach(s=>{if(s.collected)return;const shardGlow=1+Math.sin(Date.now()/130+s.x)*.18;ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Date.now()/850+s.x*.01);ctx.scale(shardGlow,shardGlow);ctx.fillStyle='#bfff4f';ctx.shadowColor='#ff354f';ctx.shadowBlur=20;ctx.fillRect(-7,-7,14,14);ctx.restore()});
-  world.switches.forEach(s=>{const switchGlow=1+Math.sin(Date.now()/150+s.x)*.12;ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,15*switchGlow,0,Math.PI*2);ctx.fillStyle=s.active?'#ff354f':'#ff8e3c';ctx.shadowColor=s.active?'#ff354f':'#ff8e3c';ctx.shadowBlur=22;ctx.fill();ctx.shadowBlur=0;text(s.active?'ON':'E',s.x,s.y+4,10,'#0d0307','center');if(!s.active&&Math.hypot((mePlayer.x+mePlayer.w/2)-s.x,(mePlayer.y+mePlayer.h/2)-s.y)<145){ctx.strokeStyle='#ffd166';ctx.lineWidth=2;ctx.beginPath();ctx.arc(s.x,s.y,24+Math.sin(Date.now()/100)*3,0,Math.PI*2);ctx.stroke();text('TAP / E',s.x,s.y-24,10,'#ffd166','center')}ctx.restore()});
+  world.switches.forEach(s=>{const switchGlow=1+Math.sin(Date.now()/150+s.x)*.12;ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,15*switchGlow,0,Math.PI*2);ctx.fillStyle=s.active?'#ff354f':'#ff8e3c';ctx.shadowColor=s.active?'#ff354f':'#ff8e3c';ctx.shadowBlur=22;ctx.fill();ctx.shadowBlur=0;text(s.active?'ON':'AUTO',s.x,s.y+4,10,'#0d0307','center');if(!s.active&&Math.hypot((mePlayer.x+mePlayer.w/2)-s.x,(mePlayer.y+mePlayer.h/2)-s.y)<145){ctx.strokeStyle='#ffd166';ctx.lineWidth=2;ctx.beginPath();ctx.arc(s.x,s.y,24+Math.sin(Date.now()/100)*3,0,Math.PI*2);ctx.stroke();text('TAP / E',s.x,s.y-24,10,'#ffd166','center')}ctx.restore()});
   const g=world.goal;ctx.save();const portalPulse=1+Math.sin(Date.now()/180)*.08;ctx.translate(g.x+g.w/2,g.y+g.h/2);ctx.scale(portalPulse,portalPulse);ctx.shadowColor='#ff354f';ctx.shadowBlur=30;ctx.strokeStyle='#ff354f';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(0,0,g.w/2,g.h/2,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#ff354f20';ctx.fill();ctx.restore();text('EXIT',g.x+g.w/2,g.y-8,12,'#ff354f','center');
   players.forEach(drawFork);
   ctx.restore();
   if(won){ctx.fillStyle='#0d0307dd';ctx.fillRect(0,0,W,H);text('LEVEL CLEARED!',W/2,220,42,'#ff354f','center');text('Puzzle solved. Crew synchronized.',W/2,265,20,'#fff0f2','center');text('NEXT LEVEL LOADING AUTOMATICALLY…',W/2,305,15,'#ffdce0','center')}
   requestAnimationFrame(render);
 }
-function collide(p){p.ground=false;for(const b of world.platforms){if(b.type==='gate'&&!world.gateOpen)continue;if(p.vy>=0&&p.x+p.w>b.x&&p.x<b.x+b.w&&p.y+p.h>=b.y&&p.y+p.h-p.vy<=b.y){p.y=b.y-p.h;if(b.type==='boost'){p.vy=-15;p.ground=false}else{p.vy=0;p.ground=true}}}}
+function collide(p){
+  p.ground=false;
+  for(const b of world.platforms){
+    if(b.type==='gate'&&!world.gateOpen)continue;
+    if(p.vy>=0&&p.x+p.w>b.x&&p.x<b.x+b.w&&p.y+p.h>=b.y&&p.y+p.h-p.vy<=b.y){
+      p.y=b.y-p.h;
+      if(b.type==='boost'){p.vy=-15;p.ground=false}else{p.vy=0;p.ground=true}
+    }
+  }
+  // Fork buddies are solid from above, so players can build a human ladder.
+  if(p.vy>=0){
+    for(const other of players.values()){
+      if(other.id===p.id)continue;
+      const feet=p.y+p.h;
+      if(p.x+p.w>other.x+3&&p.x<other.x+other.w-3&&feet>=other.y&&feet-p.vy<=other.y+7&&p.y<other.y){
+        p.y=other.y-p.h;p.vy=0;p.ground=true;p.standingOn=other.id;break;
+      }
+    }
+  }
+}
 function atPortal(p){const g=world.goal;return p.x+p.w>g.x&&p.x<g.x+g.w&&p.y+p.h>g.y&&p.y<g.y+g.h}
 function update(){
   updateHazards();
@@ -562,8 +582,16 @@ function update(){
   for(const [id,r] of Object.entries(remoteStates)){const q=players.get(id);if(q){const dx=r.x-q.x,dy=r.y-q.y;if(Math.abs(dx)>130||Math.abs(dy)>130){q.x=r.x;q.y=r.y}else{q.x+=dx*.34;q.y+=dy*.34}q.name=r.name||q.name||'Fork buddy';q.color=r.color||q.color}}
   const nearbySwitch=world.switches.find(s=>!s.active&&Math.hypot((p.x+p.w/2)-s.x,(p.y+p.h/2)-s.y)<145);
   if(nearbySwitch)activateSwitch(true);
-  world.plates.forEach(plate=>{plate.occupied=[...players.values()].some(player=>player.x+player.w>plate.x&&player.x<plate.x+plate.w&&player.y+player.h>plate.y&&player.y<plate.y+plate.h+8)});
-  world.gateOpen=world.switches.every(s=>s.active)&&(world.plates.length===0||world.plates.some(plate=>plate.occupied));
+  world.buttons.forEach(button=>{
+    // Only feet resting on the button's top press it; brushing its side does nothing.
+    button.occupied=[...players.values()].some(player=>
+      player.ground&&player.x+player.w>button.x&&player.x<button.x+button.w&&
+      Math.abs((player.y+player.h)-(button.y+button.h))<=5
+    );
+  });
+  const buttonsReady=world.buttons.length===0||
+    (roomCode&&players.size>1?world.buttons.every(button=>button.occupied):world.buttons.some(button=>button.occupied));
+  world.gateOpen=world.switches.every(s=>s.active)&&buttonsReady;
   for(const shard of world.shards){
     if(shard.collected)continue;
     for(const player of players.values()){
@@ -581,6 +609,7 @@ function update(){
   if(!won){
     if(!shardsReady)setGameStatus(at?'PORTAL LOCKED // FIND SHARDS':'COLLECT FORK SHARDS');
     else if(!switchesReady)setGameStatus('FIND AND APPROACH THE SWITCH');
+    else if(!buttonsReady)setGameStatus(roomCode&&players.size>1?'CO-OP PUZZLE // STAND ON ALL BUTTONS':'STEP ON A BUTTON TO OPEN THE GATE');
     else if(portalReady[me]&&!teamReady)setGameStatus('PORTAL LOCKED IN // WAITING FOR ALL CREW ('+Object.keys(portalReady).filter(id=>portalReady[id]).length+'/'+players.size+')');
     else if(portalReady[me]&&teamReady){
       won=true;setGameStatus('LEVEL CLEARED! NEXT LEVEL LOADING…');
@@ -749,8 +778,8 @@ document.getElementById('fullscreenBtn').addEventListener('click',async()=>{
     else if(document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen()}
   }catch{setGameStatus('Fullscreen is unavailable in this browser.')}
 });
-document.getElementById('prevLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?5:(currentLevel+levelTemplates.length-1)%levelTemplates.length,0));
-document.getElementById('nextLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?0:(currentLevel+1)%levelTemplates.length,0));
+document.getElementById('prevLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?5:(currentLevel+levelTembuttons.length-1)%levelTembuttons.length,0));
+document.getElementById('nextLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?0:(currentLevel+1)%levelTembuttons.length,0));
 document.getElementById('randomLevelBtn').addEventListener('click',()=>requestLevel(6,(Math.random()*0xffffffff)>>>0));
 document.getElementById('restartLevelBtn').addEventListener('click',restartCurrentLevel);
 document.getElementById('hintBtn').addEventListener('click',showPuzzleHint);
