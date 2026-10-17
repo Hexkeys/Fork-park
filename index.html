@@ -161,14 +161,14 @@ body:has(#gameLayout.active){overflow:hidden;touch-action:manipulation}
   #gameLayout.active .touch .jump{min-width:132px;height:96px;font-size:18px;font-weight:900;letter-spacing:1px}
 }
 
-/* Pixel-art mode: nearest-neighbour canvas scaling and crisp, tile-like interface. */
-canvas{image-rendering:pixelated;image-rendering:crisp-edges}
-button,.panel,.gamebox,.hero,.sectionBlock,.terminal-panel,.lobby-hero,.lobby-card,.player,.partycode,.field input{border-radius:0!important}
-button{box-shadow:3px 3px 0 #000!important;text-transform:uppercase;letter-spacing:.4px}
-button:active{box-shadow:1px 1px 0 #000!important}
-.logo,.hero h2,.lobby-title,.bar h2,.gamehead strong{text-shadow:2px 2px 0 #07150b}
-#gameLayout.active .gamehead,#gameLayout.active .puzzle-hud,#gameLayout.active .level-toolbar{backdrop-filter:none!important;box-shadow:3px 3px 0 #000!important}
-#gameLayout.active .touch button{border-radius:0!important;box-shadow:3px 3px 0 #000!important}
+/* Smooth, rounded presentation. */
+canvas{image-rendering:auto}
+button,.panel,.gamebox,.hero,.sectionBlock,.terminal-panel,.lobby-hero,.lobby-card,.player,.partycode,.field input{border-radius:12px}
+button{box-shadow:0 5px 16px #0003;letter-spacing:0;text-transform:none}
+.logo,.hero h2,.lobby-title,.bar h2,.gamehead strong{text-shadow:0 2px 14px #39ff7222}
+#gameLayout.active .gamehead,#gameLayout.active .puzzle-hud,#gameLayout.active .level-toolbar{backdrop-filter:blur(10px);box-shadow:0 8px 24px #0003}
+#gameLayout.active .touch button{border-radius:16px;box-shadow:0 8px 24px #0004}
+.auto-pulse-label{display:flex;align-items:center;justify-content:center;padding:9px 12px;border:1px solid #1c6b38;border-radius:10px;background:#031008;color:#8fffae;font-size:11px;font-weight:800;letter-spacing:.5px}
 </style>
 </head>
 <body><main class="wrap">
@@ -240,12 +240,11 @@ button:active{box-shadow:1px 1px 0 #000!important}
   <button class="secondary" id="nextLevelBtn" aria-label="Next level">NEXT ▶</button>
   <button class="secondary" id="randomLevelBtn" aria-label="Generate a random level">⚄ RANDOM</button>
   <button class="secondary" id="hintBtn" aria-label="Show a puzzle hint">? HINT</button>
-  <button id="actionBtn" aria-label="Interact with a switch or use a quantum pulse">⚡ PULSE / E</button>
-  <button id="dashBtn" aria-label="Dash forward">➤ DASH / SHIFT</button>
+  <span class="auto-pulse-label">✦ AUTO-PULSE ACTIVE</span>
 </div>
 <div class="puzzle-hud" aria-live="polite"><b id="shardCounter">SHARDS 0 / 3</b><span id="puzzleHint">Collect the glowing shards, activate circuit switches, and reach the portal.</span></div>
 </section><aside class="side">
-<section class="panel"><h3>🎮 Controls</h3><p><b>Move:</b> A / D or ← / →</p><p><b>Jump:</b> W, ↑, or Space</p><p><b>Interact / pulse:</b> E or the gold button. Stand near a circuit switch to open its bridge.</p><p><b>Level buttons:</b> PREV / NEXT switch designed stages; RANDOM builds a seeded layout. In parties, the leader chooses the level.</p><p><b>Puzzles:</b> collect all 3 fork shards, activate any switch, then get every crew member through the portal.</p><p><b>Mobile:</b> movement, jump, and puzzle/action buttons remain visible.</p></section></aside></div>
+<section class="panel"><h3>🎮 Controls</h3><p><b>Move:</b> A / D or ← / →</p><p><b>Jump:</b> W, ↑, or Space</p><p><b>Auto-pulse:</b> get close to a circuit switch and it activates automatically.</p><p><b>Level buttons:</b> PREV / NEXT switch designed stages; RANDOM builds a seeded layout. In parties, the leader chooses the level.</p><p><b>Puzzles:</b> collect all 3 fork shards, activate any switch, then get every crew member through the portal.</p><p><b>Mobile:</b> large movement and jump controls stay on screen.</p></section></aside></div>
 <div class="bottom">EXPLODING FORK // KEEP YOUR CREW TOGETHER.</div>
 </main>
 <script>
@@ -258,12 +257,12 @@ if (!canvas || !ctx) {
   return;
 }
 const W=960,H=540,keys={left:false,right:false},players=new Map();
-// Render the 960×540 world into a half-resolution buffer, then scale it with nearest-neighbour pixels.
-canvas.width=480;canvas.height=270;ctx.imageSmoothingEnabled=false;ctx.scale(0.5,0.5);
+// Render at full resolution for smooth edges and motion.
+canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=true;
 const colors=['#39ff72','#bfff4f','#ff8e3c','#8fe6ac','#e4ffd0'];
 let me='solo',socket=null,socketReady=false,host=false,ownerId=null,roomCode='';
 let remoteStates=Object.create(null),lastSend=0,won=false,reconnectTimer=null,advanceTimer=null;
-let currentLevel=0,currentSeed=0,cameraX=0,dashFrames=0,dashCooldownUntil=0,facing=1,jumpBufferUntil=0;
+let currentLevel=0,currentSeed=0,cameraX=0,jumpBufferUntil=0;
 let portalReady=Object.create(null);
 const levelTemplates=[
 {name:'THE SPLIT',goal:{x:875,y:385,w:42,h:70},platforms:[
@@ -373,7 +372,7 @@ function loadLevel(index,seed){
   currentSeed=(seed>>>0)||0;
   if(advanceTimer){window.clearTimeout(advanceTimer);advanceTimer=null}
   const spec=currentLevel===6?extendLevel(randomLevelData(currentSeed),6):levelTemplates[currentLevel];
-  cameraX=0;dashFrames=0;dashCooldownUntil=0;jumpBufferUntil=0;portalReady=Object.create(null);
+  cameraX=0;jumpBufferUntil=0;portalReady=Object.create(null);
   world.goal={...spec.goal};
   world.platforms=spec.platforms.map(p=>({...p}));
   world.shards=spec.shards.map(s=>({...s,collected:false}));
@@ -410,7 +409,7 @@ function showPuzzleHint(){
   if(switchObj){hint.textContent='HINT: move close to the '+switchObj.label+' and press E or ⚡ PULSE to open the bridge.';return}
   hint.textContent='HINT: the puzzle is solved. Lead your whole crew into the glowing portal.';
 }
-function activateSwitch(){
+function activateSwitch(automatic=false){
   const p=mePlayer,near=world.switches.find(s=>!s.active&&Math.hypot((p.x+p.w/2)-s.x,(p.y+p.h/2)-s.y)<145);
   if(near){
     near.active=true;world.gateOpen=true;setGameStatus('CIRCUIT OPEN // BRIDGE ENABLED');updateLevelUi();
@@ -421,9 +420,7 @@ function activateSwitch(){
     setGameStatus('MOVE CLOSER TO THE SWITCH');
     return;
   }
-  const direction=keys.left?-1:1;
-  p.vx+=direction*3.2;
-  setGameStatus('QUANTUM PULSE!');
+  if(!automatic)setGameStatus('ALL CIRCUITS ACTIVE');
 }
 function applyPuzzleAction(){
   world.gateOpen=true;
@@ -433,14 +430,13 @@ function applyPuzzleAction(){
 }
 function resetRunToStart(reason){
   if(advanceTimer){window.clearTimeout(advanceTimer);advanceTimer=null}
-  won=false;portalReady=Object.create(null);dashFrames=0;cameraX=0;jumpBufferUntil=0;
+  won=false;portalReady=Object.create(null);cameraX=0;jumpBufferUntil=0;
   world.shards.forEach(s=>{s.collected=false});
   world.switches.forEach(s=>{s.active=false});
   world.gateOpen=world.switches.length===0;
   let spawn=0;
   players.forEach((player,id)=>{
     player.x=65+spawn*12;player.y=410;player.vx=0;player.vy=0;player.ground=false;
-    player.dashFrames=0;
     if(id!==me)remoteStates[id]={...(remoteStates[id]||{}),id,x:player.x,y:player.y,name:player.name,color:player.color};
     spawn++;
   });
@@ -474,18 +470,14 @@ function setNetworkStatus(message){document.querySelectorAll('[data-network-stat
 function setGameStatus(message){document.getElementById('gameStatus').textContent=message}
 function text(s,x,y,size=16,color='#f4f7ff',align='left'){ctx.font='700 '+size+'px system-ui';ctx.fillStyle=color;ctx.textAlign=align;ctx.fillText(s,x,y)}
 function drawFork(p){
-  // Chunky fork hero built from hard-edged pixel blocks.
-  const x=Math.round(p.x/4)*4,y=Math.round(p.y/4)*4,w=Math.round(p.w/4)*4,h=Math.round(p.h/4)*4,c=p.color||colors[0];
-  ctx.save();ctx.shadowBlur=0;ctx.fillStyle='#07150b';ctx.fillRect(x+4,y+8,w-8,h-4);
-  ctx.fillStyle=c;ctx.fillRect(x+4,y+8,w-8,h-8);ctx.fillRect(x+8,y+4,w-16,4);
-  ctx.fillStyle='#e0ffe8';ctx.fillRect(x+7,y+12,4,4);ctx.fillRect(x+w-11,y+12,4,4);
-  ctx.fillStyle='#07150b';ctx.fillRect(x+8,y+16,4,4);ctx.fillRect(x+w-12,y+16,4,4);
-  ctx.fillRect(x+8,y+h-4,4,4);ctx.fillRect(x+w-12,y+h-4,4,4);
-  // Fork prongs, squared off like a tiny pixel sprite.
-  ctx.fillStyle='#d6ffe0';ctx.fillRect(x+7,y-4,4,12);ctx.fillRect(x+Math.floor(w/2)-2,y-8,4,16);ctx.fillRect(x+w-11,y-4,4,12);
-  ctx.fillStyle='#07150b';ctx.fillRect(x+11,y+4,4,4);ctx.fillRect(x+Math.floor(w/2)+2,y+4,4,4);
-  ctx.restore();
-  text(p.name||'Fork buddy',x+w/2,y-10,12,c,'center');
+  const x=p.x,y=p.y,w=p.w,h=p.h,c=p.color||colors[0];
+  ctx.save();ctx.shadowColor=c;ctx.shadowBlur=12;
+  ctx.fillStyle='#06150b';ctx.beginPath();ctx.roundRect(x+1,y+3,w-2,h-1,10);ctx.fill();
+  ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(x+3,y+5,w-6,h-8,9);ctx.fill();
+  ctx.shadowBlur=0;ctx.fillStyle='#e0ffe8';ctx.beginPath();ctx.arc(x+10,y+15,3,0,Math.PI*2);ctx.arc(x+w-10,y+15,3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#06150b';ctx.beginPath();ctx.arc(x+10,y+15,1.5,0,Math.PI*2);ctx.arc(x+w-10,y+15,1.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#d6ffe0';ctx.lineWidth=3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x+7,y+5);ctx.lineTo(x+7,y-2);ctx.moveTo(x+w/2,y+5);ctx.lineTo(x+w/2,y-7);ctx.moveTo(x+w-7,y+5);ctx.lineTo(x+w-7,y-2);ctx.stroke();
+  ctx.restore();text(p.name||'Fork buddy',x+w/2,y-12,12,c,'center');
 }
 function render(){
   ctx.clearRect(0,0,W,H);const bg=ctx.createLinearGradient(0,0,0,H);
@@ -501,9 +493,9 @@ function render(){
     else if(p.type==='boost'){ctx.fillStyle='#2c250b';ctx.strokeStyle='#ffd166';ctx.shadowColor='#ffd166';}
     else{const q=p.type==='quantum';ctx.fillStyle=q?'#0b2c16':'#14211a';ctx.strokeStyle=q?'#39ff72':'#285535';ctx.shadowColor=q?'#39ff72':'transparent'}
     ctx.lineWidth=2;ctx.shadowBlur=0;
-    const px=Math.round(p.x/4)*4,py=Math.round(p.y/4)*4,pw=Math.max(4,Math.round(p.w/4)*4),ph=Math.max(4,Math.round(p.h/4)*4);
-    ctx.fillRect(px,py,pw,ph);ctx.strokeRect(px,py,pw,ph);
-    if(p.type!=='gate'){ctx.fillStyle=p.type==='boost'?'#ffd166':(p.type==='quantum'?'#8cff9d':'#39ff72');ctx.fillRect(px,py,pw,4);ctx.fillStyle=p.type==='quantum'?'#164b29':'#0a1c10';ctx.fillRect(px+4,py+4,Math.max(0,pw-8),Math.max(0,ph-8));}
+    const px=p.x,py=p.y,pw=p.w,ph=p.h;
+    ctx.beginPath();ctx.roundRect(px,py,pw,ph,Math.min(9,ph/2));ctx.fill();ctx.stroke();
+    if(p.type!=='gate'){ctx.fillStyle=p.type==='boost'?'#ffd166':(p.type==='quantum'?'#8cff9d':'#39ff72');ctx.beginPath();ctx.roundRect(px,py,pw,5,3);ctx.fill();ctx.fillStyle=p.type==='quantum'?'#164b29':'#0a1c10';ctx.beginPath();ctx.roundRect(px+5,py+7,Math.max(0,pw-10),Math.max(0,ph-12),5);ctx.fill();}
     ctx.shadowBlur=0;
     if(p.type==='gate'&&!world.gateOpen){ctx.strokeStyle='#ff8e3c';ctx.beginPath();for(let x=p.x+8;x<p.x+p.w;x+=18){ctx.moveTo(x,p.y+2);ctx.lineTo(x,p.y+p.h-2)}ctx.stroke()}
     else if(p.type==='quantum'){ctx.fillStyle='#39ff72';ctx.fillRect(p.x+10,p.y+4,Math.max(0,p.w-20),2)}
@@ -537,13 +529,14 @@ function update(){
     else if(jumpBufferUntil&&Date.now()>jumpBufferUntil)jumpBufferUntil=0;
     const ax=(keys.right?1:0)-(keys.left?1:0);
     if(ax)facing=ax;
-    if(dashFrames>0){p.vx=facing*12.5;dashFrames--}
-    else{p.vx+=ax*.7;p.vx=Math.max(-5.2,Math.min(5.2,p.vx));if(!ax)p.vx*=world.friction}
+    p.vx+=ax*.7;p.vx=Math.max(-5.2,Math.min(5.2,p.vx));if(!ax)p.vx*=world.friction
     p.x+=p.vx;p.vy=Math.min(12,p.vy+world.gravity);p.y+=p.vy;collide(p);p.x=Math.max(0,Math.min(world.width-p.w,p.x));
     if(p.y>H+80){playerDied('CREW WIPE // FALL DETECTED — BACK TO START')}
     else if(touchingHazard(p)){playerDied('CREW WIPE // HAZARD HIT — BACK TO START')}
   }
   for(const [id,r] of Object.entries(remoteStates)){const q=players.get(id);if(q){const dx=r.x-q.x,dy=r.y-q.y;if(Math.abs(dx)>130||Math.abs(dy)>130){q.x=r.x;q.y=r.y}else{q.x+=dx*.34;q.y+=dy*.34}q.name=r.name||q.name||'Fork buddy';q.color=r.color||q.color}}
+  const nearbySwitch=world.switches.find(s=>!s.active&&Math.hypot((p.x+p.w/2)-s.x,(p.y+p.h/2)-s.y)<145);
+  if(nearbySwitch)activateSwitch(true);
   world.plates.forEach(plate=>{plate.occupied=[...players.values()].some(player=>player.x+player.w>plate.x&&player.x<plate.x+plate.w&&player.y+player.h>plate.y&&player.y<plate.y+plate.h+8)});
   world.gateOpen=world.switches.every(s=>s.active)&&(world.plates.length===0||world.plates.some(plate=>plate.occupied));
   for(const shard of world.shards){
@@ -725,8 +718,6 @@ document.getElementById('jumpBtn').addEventListener('pointerdown',e=>{e.preventD
 document.addEventListener('dblclick',e=>{e.preventDefault()},{passive:false});
 document.addEventListener('contextmenu',e=>{if(document.getElementById('gameLayout').classList.contains('active'))e.preventDefault()});
 document.getElementById('returnLobbyBtn').addEventListener('click',()=>showScreen(roomCode?'partyLobby':'lobbyHome'));
-document.getElementById('dashBtn').addEventListener('click',useDash);
-window.addEventListener('keydown',e=>{if(e.target instanceof HTMLElement&&e.target.matches('input,textarea,select'))return;if((e.key==='Shift'||e.key.toLowerCase()==='x')&&!e.repeat){e.preventDefault();useDash()}});
 document.getElementById('fullscreenBtn').addEventListener('click',async()=>{
   try{
     if(document.fullscreenElement){await document.exitFullscreen()}
@@ -738,10 +729,6 @@ document.getElementById('nextLevelBtn').addEventListener('click',()=>requestLeve
 document.getElementById('randomLevelBtn').addEventListener('click',()=>requestLevel(6,(Math.random()*0xffffffff)>>>0));
 document.getElementById('restartLevelBtn').addEventListener('click',restartCurrentLevel);
 document.getElementById('hintBtn').addEventListener('click',showPuzzleHint);
-document.getElementById('actionBtn').addEventListener('click',activateSwitch);
-// Tap a nearby switch directly in the world as well as using E / PULSE.
-canvas.addEventListener('pointerdown',event=>{const rect=canvas.getBoundingClientRect();const x=(event.clientX-rect.left)*W/rect.width+cameraX;const y=(event.clientY-rect.top)*H/rect.height;if(world.switches.some(s=>!s.active&&Math.hypot(s.x-x,s.y-y)<48))activateSwitch()});
-window.addEventListener('keydown',e=>{if(e.target instanceof HTMLElement&&e.target.matches('input,textarea,select'))return;if(e.key.toLowerCase()==='e'&&!e.repeat)activateSwitch()});
 loadLevel(0,0);
 
 connectSocket();render();update();
