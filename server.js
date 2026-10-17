@@ -287,7 +287,7 @@ function createForkParkServer() {
         fail(socket, 'PARTY_NOT_STARTED', 'Initialize the arena before changing levels.');
         return;
       }
-      if (!Number.isInteger(message.level) || message.level < 0 || message.level > 6 ||
+      if (!Number.isInteger(message.level) || message.level < 0 || message.level > 1000000 ||
           !Number.isInteger(message.seed) || message.seed < 0 || message.seed > 0xffffffff) {
         fail(socket, 'INVALID_LEVEL', 'Choose a valid level and random seed.');
         return;
