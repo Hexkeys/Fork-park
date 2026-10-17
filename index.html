@@ -297,7 +297,7 @@ let me='solo',socket=null,socketReady=false,host=false,ownerId=null,roomCode='';
 let remoteStates=Object.create(null),lastSend=0,won=false,reconnectTimer=null,advanceTimer=null;
 let currentLevel=0,currentSeed=0,cameraX=0,jumpBufferUntil=0;
 let portalReady=Object.create(null);
-const levelTembuttons=[
+const levelTemplates=[
 {name:'THE SPLIT',goal:{x:875,y:385,w:42,h:70},platforms:[
 {x:0,y:470,w:245,h:70,type:'solid'},{x:300,y:425,w:145,h:22,type:'quantum'},
 {x:495,y:375,w:125,h:22,type:'solid'},{x:665,y:430,w:115,h:22,type:'quantum'},
@@ -308,7 +308,7 @@ const levelTembuttons=[
 {x:370,y:370,w:105,h:18,type:'solid'},{x:510,y:415,w:105,h:18,type:'quantum'},
 {x:645,y:350,w:110,h:18,type:'solid'},{x:810,y:455,w:150,h:85,type:'solid'}],
 shards:[{x:270,y:390},{x:410,y:340},{x:690,y:320}],switches:[]},
-{name:'SWITCHBACK',goal:{x:875,y:385,w:42,h:70},buttons:[{x:360,y:360,w:40,h:20,label:'CREW PLATE'}],platforms:[
+{name:'SWITCHBACK',goal:{x:875,y:385,w:42,h:70},buttons:[{x:365,y:368,w:42,h:12,label:'TEAM BUTTON A'},{x:520,y:408,w:42,h:12,label:'TEAM BUTTON B'}],platforms:[
 {x:0,y:470,w:190,h:70,type:'solid'},{x:215,y:420,w:100,h:18,type:'quantum'},
 {x:350,y:380,w:120,h:18,type:'solid'},{x:495,y:420,w:95,h:18,type:'quantum'},
 {x:610,y:365,w:100,h:16,type:'gate'},{x:760,y:440,w:200,h:100,type:'solid'}],
@@ -361,7 +361,7 @@ function extendLevel(base,index){
   spec.goal={x:3025,y:385,w:42,h:70};
   return spec;
 }
-levelTembuttons.forEach((spec,index)=>{levelTembuttons[index]=extendLevel(spec,index)});
+levelTemplates.forEach((spec,index)=>{levelTemplates[index]=extendLevel(spec,index)});
 const world={gravity:.62,friction:.82,width:3200,goal:{x:875,y:385,w:42,h:70},platforms:[],shards:[],switches:[],buttons:[],hazards:[],gateOpen:false};
 const mePlayer={id:me,name:'Exploding Fork',x:65,y:410,vx:0,vy:0,w:30,h:42,color:colors[1],ground:false};
 players.set(me,mePlayer);
@@ -384,14 +384,14 @@ function randomLevelData(seed){
 }
 function updateLevelUi(){
   const label=document.getElementById('levelLabel');
-  if(label)label.textContent=currentLevel===6?'RANDOM // SEED '+String(currentSeed).padStart(10,'0'):'LEVEL '+String(currentLevel+1).padStart(2,'0')+' — '+levelTembuttons[currentLevel].name;
+  if(label)label.textContent=currentLevel===6?'RANDOM // SEED '+String(currentSeed).padStart(10,'0'):'LEVEL '+String(currentLevel+1).padStart(2,'0')+' — '+levelTemplates[currentLevel].name;
   const hint=document.getElementById('puzzleHint');
   const count=document.getElementById('shardCounter');
   if(count)count.textContent='SHARDS '+world.shards.filter(s=>s.collected).length+' / '+world.shards.length;
   if(hint){
     const left=world.shards.filter(s=>!s.collected).length;
     hint.textContent=left?'PUZZLE: collect '+left+' remaining glowing shard(s).':
-      (world.switches.some(s=>!s.active)?'PUZZLE: move close to the circuit switch to activate it.':(world.buttons.some(p=>!p.occupied)?'CO-OP PUZZLE: one buddy must stand on the CREW PLATE to hold the gate open.':'PUZZLE COMPLETE: regroup at the portal.'));
+      (world.switches.some(s=>!s.active)?'PUZZLE: step on floor buttons together; stack on a buddy to reach high ledges.':(world.buttons.some(p=>!p.occupied)?'CO-OP PUZZLE: stand on every floor button together to hold the gate open.':'PUZZLE COMPLETE: regroup at the portal.'));
   }
   updateLevelControls();
 }
@@ -402,10 +402,10 @@ function updateLevelControls(){
   });
 }
 function loadLevel(index,seed){
-  currentLevel=index===6?6:Math.max(0,Math.min(levelTembuttons.length-1,index|0));
+  currentLevel=index===6?6:Math.max(0,Math.min(levelTemplates.length-1,index|0));
   currentSeed=(seed>>>0)||0;
   if(advanceTimer){window.clearTimeout(advanceTimer);advanceTimer=null}
-  const spec=currentLevel===6?extendLevel(randomLevelData(currentSeed),6):levelTembuttons[currentLevel];
+  const spec=currentLevel===6?extendLevel(randomLevelData(currentSeed),6):levelTemplates[currentLevel];
   cameraX=0;jumpBufferUntil=0;portalReady=Object.create(null);
   world.goal={...spec.goal};
   world.platforms=spec.platforms.map(p=>({...p}));
@@ -585,7 +585,7 @@ function update(){
   world.buttons.forEach(button=>{
     // Only feet resting on the button's top press it; brushing its side does nothing.
     button.occupied=[...players.values()].some(player=>
-      player.ground&&player.x+player.w>button.x&&player.x<button.x+button.w&&
+      player.x+player.w>button.x&&player.x<button.x+button.w&&
       Math.abs((player.y+player.h)-(button.y+button.h))<=5
     );
   });
@@ -778,8 +778,8 @@ document.getElementById('fullscreenBtn').addEventListener('click',async()=>{
     else if(document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen()}
   }catch{setGameStatus('Fullscreen is unavailable in this browser.')}
 });
-document.getElementById('prevLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?5:(currentLevel+levelTembuttons.length-1)%levelTembuttons.length,0));
-document.getElementById('nextLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?0:(currentLevel+1)%levelTembuttons.length,0));
+document.getElementById('prevLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?5:(currentLevel+levelTemplates.length-1)%levelTemplates.length,0));
+document.getElementById('nextLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?0:(currentLevel+1)%levelTemplates.length,0));
 document.getElementById('randomLevelBtn').addEventListener('click',()=>requestLevel(6,(Math.random()*0xffffffff)>>>0));
 document.getElementById('restartLevelBtn').addEventListener('click',restartCurrentLevel);
 document.getElementById('hintBtn').addEventListener('click',showPuzzleHint);
