@@ -168,7 +168,7 @@ button{box-shadow:0 5px 16px #0003;letter-spacing:0;text-transform:none}
 .logo,.hero h2,.lobby-title,.bar h2,.gamehead strong{text-shadow:0 2px 14px #ff354f22}
 #gameLayout.active .gamehead,#gameLayout.active .puzzle-hud,#gameLayout.active .level-toolbar{backdrop-filter:blur(10px);box-shadow:0 8px 24px #0003}
 #gameLayout.active .touch button{border-radius:16px;box-shadow:0 8px 24px #0004}
-.auto-pulse-label{display:flex;align-items:center;justify-content:center;padding:9px 12px;border:1px solid #7a2030;border-radius:10px;background:#100609;color:#8fffae;font-size:11px;font-weight:800;letter-spacing:.5px}
+
 /* Final crimson theme override */
 :root{--bg:#0d0307;--panel:#19080d;--line:#7a2030;--green:#ff354f;--dim:#ff8a99;--text:#fff0f2;--cyan:#ff354f;--lime:#ff8998;--pink:#ff354f}
 body{background:radial-gradient(circle at 50% -10%,#641020 0,#260810 38%,#0d0307 76%);color:#fff0f2}
@@ -188,7 +188,21 @@ button.secondary{background:#16070d;border-color:#7a2030;color:#ff8a99}
 #gameLayout.active .level-toolbar{background:#0d0307d9;border-color:#7a2030}
 #gameLayout.active .puzzle-hud{background:#16070ddd;border-color:#7a2030}
 #puzzleHint{color:#ffb7c0}
-.auto-pulse-label{border-color:#7a2030;background:#16070d;color:#ff8a99}
+
+
+/* Larger movement controls for solo and multiplayer play */
+#gameLayout.active .touch{left:clamp(12px,3vw,36px);right:clamp(12px,3vw,36px);bottom:max(18px,env(safe-area-inset-bottom))}
+#gameLayout.active .touch .move{gap:14px}
+#gameLayout.active .touch button{width:104px;min-width:104px;height:100px;font-size:42px;border-width:2px}
+#gameLayout.active .touch .jump{width:150px;min-width:150px;height:108px;font-size:19px;letter-spacing:1px}
+#gameLayout.active .touch button:active{transform:scale(.94);background:#4a101c;box-shadow:0 0 26px #ff354f66}
+@media(max-width:700px){
+  #gameLayout.active .touch{left:12px;right:12px;bottom:max(18px,env(safe-area-inset-bottom))}
+  #gameLayout.active .touch .move{gap:12px}
+  #gameLayout.active .touch button{width:clamp(78px,19vw,108px);min-width:clamp(78px,19vw,108px);height:clamp(82px,20vw,108px);font-size:clamp(32px,8vw,44px);padding:8px}
+  #gameLayout.active .touch .jump{width:clamp(118px,29vw,158px);min-width:clamp(118px,29vw,158px);height:clamp(90px,22vw,116px);font-size:clamp(16px,4vw,20px)}
+}
+
 </style>
 </head>
 <body><main class="wrap">
@@ -260,11 +274,10 @@ button.secondary{background:#16070d;border-color:#7a2030;color:#ff8a99}
   <button class="secondary" id="nextLevelBtn" aria-label="Next level">NEXT ▶</button>
   <button class="secondary" id="randomLevelBtn" aria-label="Generate a random level">⚄ RANDOM</button>
   <button class="secondary" id="hintBtn" aria-label="Show a puzzle hint">? HINT</button>
-  <span class="auto-pulse-label">✦ AUTO-PULSE ACTIVE</span>
 </div>
 <div class="puzzle-hud" aria-live="polite"><b id="shardCounter">SHARDS 0 / 3</b><span id="puzzleHint">Collect the glowing shards, activate circuit switches, and reach the portal.</span></div>
 </section><aside class="side">
-<section class="panel"><h3>🎮 Controls</h3><p><b>Move:</b> A / D or ← / →</p><p><b>Jump:</b> W, ↑, or Space</p><p><b>Auto-pulse:</b> get close to a circuit switch and it activates automatically.</p><p><b>Level buttons:</b> PREV / NEXT switch designed stages; RANDOM builds a seeded layout. In parties, the leader chooses the level.</p><p><b>Puzzles:</b> collect all 3 fork shards, activate any switch, then get every crew member through the portal.</p><p><b>Mobile:</b> large movement and jump controls stay on screen.</p></section></aside></div>
+<section class="panel"><h3>🎮 Controls</h3><p><b>Move:</b> A / D or ← / →</p><p><b>Jump:</b> W, ↑, or Space</p><p><b>Switches:</b> get close to a circuit switch and it activates automatically.</p><p><b>Level buttons:</b> PREV / NEXT switch designed stages; RANDOM builds a seeded layout. In parties, the leader chooses the level.</p><p><b>Puzzles:</b> collect all 3 fork shards, activate any switch, then get every crew member through the portal.</p><p><b>Mobile:</b> large movement and jump controls stay on screen.</p></section></aside></div>
 <div class="bottom">EXPLODING FORK // KEEP YOUR CREW TOGETHER.</div>
 </main>
 <script>
@@ -377,7 +390,7 @@ function updateLevelUi(){
   if(hint){
     const left=world.shards.filter(s=>!s.collected).length;
     hint.textContent=left?'PUZZLE: collect '+left+' remaining glowing shard(s).':
-      (world.switches.some(s=>!s.active)?'PUZZLE: stand near the circuit switch and press E / PULSE.':(world.plates.some(p=>!p.occupied)?'CO-OP PUZZLE: one buddy must stand on the CREW PLATE to hold the gate open.':'PUZZLE COMPLETE: regroup at the portal.'));
+      (world.switches.some(s=>!s.active)?'PUZZLE: move close to the circuit switch to activate it.':(world.plates.some(p=>!p.occupied)?'CO-OP PUZZLE: one buddy must stand on the CREW PLATE to hold the gate open.':'PUZZLE COMPLETE: regroup at the portal.'));
   }
   updateLevelControls();
 }
@@ -426,7 +439,7 @@ function showPuzzleHint(){
   const left=world.shards.filter(s=>!s.collected).length;
   if(left){hint.textContent='HINT: look for '+left+' glowing green shard(s) on the platforms before entering the portal.';return}
   const switchObj=world.switches.find(s=>!s.active);
-  if(switchObj){hint.textContent='HINT: move close to the '+switchObj.label+' and press E or ⚡ PULSE to open the bridge.';return}
+  if(switchObj){hint.textContent='HINT: move close to the '+switchObj.label+' and get close to activate it and open the bridge.';return}
   hint.textContent='HINT: the puzzle is solved. Lead your whole crew into the glowing portal.';
 }
 function activateSwitch(automatic=false){
@@ -522,8 +535,8 @@ function render(){
     for(let i=0;i<teeth;i++){const x=h.x+i*h.w/teeth;ctx.lineTo(x+h.w/teeth*.5,h.y);ctx.lineTo(x+h.w/teeth,h.y+h.h)}
     ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
   });
-  world.shards.forEach(s=>{if(s.collected)return;const pulse=1+Math.sin(Date.now()/130+s.x)*.18;ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Date.now()/850+s.x*.01);ctx.scale(pulse,pulse);ctx.fillStyle='#bfff4f';ctx.shadowColor='#ff354f';ctx.shadowBlur=20;ctx.fillRect(-7,-7,14,14);ctx.restore()});
-  world.switches.forEach(s=>{const pulse=1+Math.sin(Date.now()/150+s.x)*.12;ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,15*pulse,0,Math.PI*2);ctx.fillStyle=s.active?'#ff354f':'#ff8e3c';ctx.shadowColor=s.active?'#ff354f':'#ff8e3c';ctx.shadowBlur=22;ctx.fill();ctx.shadowBlur=0;text(s.active?'ON':'E',s.x,s.y+4,10,'#0d0307','center');if(!s.active&&Math.hypot((mePlayer.x+mePlayer.w/2)-s.x,(mePlayer.y+mePlayer.h/2)-s.y)<145){ctx.strokeStyle='#ffd166';ctx.lineWidth=2;ctx.beginPath();ctx.arc(s.x,s.y,24+Math.sin(Date.now()/100)*3,0,Math.PI*2);ctx.stroke();text('TAP / E',s.x,s.y-24,10,'#ffd166','center')}ctx.restore()});
+  world.shards.forEach(s=>{if(s.collected)return;const shardGlow=1+Math.sin(Date.now()/130+s.x)*.18;ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Date.now()/850+s.x*.01);ctx.scale(shardGlow,shardGlow);ctx.fillStyle='#bfff4f';ctx.shadowColor='#ff354f';ctx.shadowBlur=20;ctx.fillRect(-7,-7,14,14);ctx.restore()});
+  world.switches.forEach(s=>{const switchGlow=1+Math.sin(Date.now()/150+s.x)*.12;ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,15*switchGlow,0,Math.PI*2);ctx.fillStyle=s.active?'#ff354f':'#ff8e3c';ctx.shadowColor=s.active?'#ff354f':'#ff8e3c';ctx.shadowBlur=22;ctx.fill();ctx.shadowBlur=0;text(s.active?'ON':'E',s.x,s.y+4,10,'#0d0307','center');if(!s.active&&Math.hypot((mePlayer.x+mePlayer.w/2)-s.x,(mePlayer.y+mePlayer.h/2)-s.y)<145){ctx.strokeStyle='#ffd166';ctx.lineWidth=2;ctx.beginPath();ctx.arc(s.x,s.y,24+Math.sin(Date.now()/100)*3,0,Math.PI*2);ctx.stroke();text('TAP / E',s.x,s.y-24,10,'#ffd166','center')}ctx.restore()});
   const g=world.goal;ctx.save();const portalPulse=1+Math.sin(Date.now()/180)*.08;ctx.translate(g.x+g.w/2,g.y+g.h/2);ctx.scale(portalPulse,portalPulse);ctx.shadowColor='#ff354f';ctx.shadowBlur=30;ctx.strokeStyle='#ff354f';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(0,0,g.w/2,g.h/2,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#ff354f20';ctx.fill();ctx.restore();text('EXIT',g.x+g.w/2,g.y-8,12,'#ff354f','center');
   players.forEach(drawFork);
   ctx.restore();
@@ -567,7 +580,7 @@ function update(){
   const teamReady=[...players.keys()].every(id=>Boolean(portalReady[id]));
   if(!won){
     if(!shardsReady)setGameStatus(at?'PORTAL LOCKED // FIND SHARDS':'COLLECT FORK SHARDS');
-    else if(!switchesReady)setGameStatus('FIND SWITCH // PRESS E / PULSE');
+    else if(!switchesReady)setGameStatus('FIND AND APPROACH THE SWITCH');
     else if(portalReady[me]&&!teamReady)setGameStatus('PORTAL LOCKED IN // WAITING FOR ALL CREW ('+Object.keys(portalReady).filter(id=>portalReady[id]).length+'/'+players.size+')');
     else if(portalReady[me]&&teamReady){
       won=true;setGameStatus('LEVEL CLEARED! NEXT LEVEL LOADING…');
