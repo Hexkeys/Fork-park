@@ -265,7 +265,7 @@ const levelTemplates=[
 {x:370,y:370,w:105,h:18,type:'solid'},{x:510,y:415,w:105,h:18,type:'quantum'},
 {x:645,y:350,w:110,h:18,type:'solid'},{x:810,y:455,w:150,h:85,type:'solid'}],
 shards:[{x:270,y:390},{x:410,y:340},{x:690,y:320}],switches:[]},
-{name:'SWITCHBACK',goal:{x:875,y:385,w:42,h:70},platforms:[
+{name:'SWITCHBACK',goal:{x:875,y:385,w:42,h:70},plates:[{x:382,y:360,w:40,h:20,label:'CREW PLATE'}],platforms:[
 {x:0,y:470,w:190,h:70,type:'solid'},{x:215,y:420,w:100,h:18,type:'quantum'},
 {x:350,y:380,w:120,h:18,type:'solid'},{x:495,y:420,w:95,h:18,type:'quantum'},
 {x:610,y:365,w:100,h:16,type:'gate'},{x:760,y:440,w:200,h:100,type:'solid'}],
@@ -297,6 +297,7 @@ function extendLevel(base,index){
     platforms:base.platforms.map(p=>({...p})),
     shards:base.shards.map(s=>({...s})),
     switches:base.switches.map(s=>({...s})),
+    plates:(base.plates||[]).map(p=>({...p})),
     hazards:(base.hazards||[]).map(v=>({...v}))
   };
   const routeY=[425,395,365,410,380,350,405,430,390,360,410,380,420,400];
@@ -317,7 +318,7 @@ function extendLevel(base,index){
   return spec;
 }
 levelTemplates.forEach((spec,index)=>{levelTemplates[index]=extendLevel(spec,index)});
-const world={gravity:.62,friction:.82,width:3200,goal:{x:875,y:385,w:42,h:70},platforms:[],shards:[],switches:[],hazards:[],gateOpen:false};
+const world={gravity:.62,friction:.82,width:3200,goal:{x:875,y:385,w:42,h:70},platforms:[],shards:[],switches:[],plates:[],hazards:[],gateOpen:false};
 const mePlayer={id:me,name:'Exploding Fork',x:65,y:410,vx:0,vy:0,w:30,h:42,color:colors[1],ground:false};
 players.set(me,mePlayer);
 
@@ -346,7 +347,7 @@ function updateLevelUi(){
   if(hint){
     const left=world.shards.filter(s=>!s.collected).length;
     hint.textContent=left?'PUZZLE: collect '+left+' remaining glowing shard(s).':
-      (world.switches.some(s=>!s.active)?'PUZZLE: stand near the circuit switch and press E / PULSE.':'PUZZLE COMPLETE: regroup at the portal.');
+      (world.switches.some(s=>!s.active)?'PUZZLE: stand near the circuit switch and press E / PULSE.':(world.plates.some(p=>!p.occupied)?'CO-OP PUZZLE: one buddy must stand on the CREW PLATE to hold the gate open.':'PUZZLE COMPLETE: regroup at the portal.'));
   }
   updateLevelControls();
 }
@@ -366,6 +367,7 @@ function loadLevel(index,seed){
   world.platforms=spec.platforms.map(p=>({...p}));
   world.shards=spec.shards.map(s=>({...s,collected:false}));
   world.switches=spec.switches.map(s=>({...s,active:false}));
+  world.plates=(spec.plates||[]).map(p=>({...p,occupied:false}));
   world.hazards=(spec.hazards||[]).map(v=>({...v}));
   world.gateOpen=world.switches.length===0;
   won=false;keys.left=false;keys.right=false;
@@ -489,6 +491,7 @@ function render(){
     else if(p.type==='quantum'){ctx.fillStyle='#39ff72';ctx.fillRect(p.x+10,p.y+4,Math.max(0,p.w-20),2)}
     else if(p.type==='boost'){ctx.fillStyle='#ffd166';ctx.beginPath();ctx.moveTo(p.x+12,p.y+13);ctx.lineTo(p.x+p.w/2,p.y+3);ctx.lineTo(p.x+p.w-12,p.y+13);ctx.stroke()}
   });
+  world.plates.forEach(p=>{ctx.save();ctx.fillStyle=p.occupied?'#39ff72':'#ffd166';ctx.strokeStyle=p.occupied?'#baffc9':'#fff0a8';ctx.shadowColor=p.occupied?'#39ff72':'#ffd166';ctx.shadowBlur=p.occupied?18:9;ctx.fillRect(p.x,p.y,p.w,p.h);ctx.strokeRect(p.x,p.y,p.w,p.h);ctx.shadowBlur=0;text(p.occupied?'HOLD':'STAND',p.x+p.w/2,p.y-7,9,p.occupied?'#39ff72':'#ffd166','center');ctx.restore()});
   world.hazards.forEach(h=>{
     ctx.save();ctx.fillStyle='#ff5b53';ctx.strokeStyle='#ffb0a8';ctx.shadowColor='#ff4d45';ctx.shadowBlur=12;ctx.beginPath();
     const teeth=Math.max(2,Math.floor(h.w/8));
@@ -523,6 +526,8 @@ function update(){
     else if(touchingHazard(p)){playerDied('CREW WIPE // HAZARD HIT — BACK TO START')}
   }
   for(const [id,r] of Object.entries(remoteStates)){const q=players.get(id);if(q){const dx=r.x-q.x,dy=r.y-q.y;if(Math.abs(dx)>130||Math.abs(dy)>130){q.x=r.x;q.y=r.y}else{q.x+=dx*.34;q.y+=dy*.34}q.name=r.name||q.name||'Fork buddy';q.color=r.color||q.color}}
+  world.plates.forEach(plate=>{plate.occupied=[...players.values()].some(player=>player.x+player.w>plate.x&&player.x<plate.x+plate.w&&player.y+player.h>plate.y&&player.y<plate.y+plate.h+8)});
+  world.gateOpen=world.switches.every(s=>s.active)&&(world.plates.length===0||world.plates.some(plate=>plate.occupied));
   for(const shard of world.shards){
     if(shard.collected)continue;
     for(const player of players.values()){
