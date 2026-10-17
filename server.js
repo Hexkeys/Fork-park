@@ -17,6 +17,8 @@ function publicPlayer(player) {
     color: player.color,
     x: player.x,
     y: player.y,
+    vx: player.vx || 0,
+    vy: player.vy || 0,
   };
 }
 
@@ -356,12 +358,14 @@ function createForkParkServer() {
       }
 
       const now = Date.now();
-      if (now - (socket.lastStateAt || 0) < 33) return;
+      if (now - (socket.lastStateAt || 0) < 25) return;
       socket.lastStateAt = now;
       if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
 
-      player.x = Math.round(Math.max(0, Math.min(4000, message.x)));
-      player.y = Math.round(Math.max(-100, Math.min(600, message.y)));
+      player.x = Math.max(0, Math.min(4000, message.x));
+      player.y = Math.max(-100, Math.min(600, message.y));
+      player.vx = Number.isFinite(message.vx) ? Math.max(-20, Math.min(20, message.vx)) : 0;
+      player.vy = Number.isFinite(message.vy) ? Math.max(-20, Math.min(20, message.vy)) : 0;
       broadcast(room, {
         type: 'player_state',
         player: publicPlayer(player),
