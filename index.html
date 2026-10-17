@@ -459,13 +459,6 @@ function queueJump(){
   if(portalReady[me])return;
   jumpBufferUntil=Date.now()+240;
 }
-function useDash(){
-  if(portalReady[me])return;
-  if(Date.now()<dashCooldownUntil){setGameStatus('DASH RECHARGING…');return}
-  dashFrames=11;dashCooldownUntil=Date.now()+1100;mePlayer.vx=facing*12.5;
-  setGameStatus('QUANTUM DASH!');
-}
-
 function setNetworkStatus(message){document.querySelectorAll('[data-network-status]').forEach(el=>{el.textContent=message})}
 function setGameStatus(message){document.getElementById('gameStatus').textContent=message}
 function text(s,x,y,size=16,color='#f4f7ff',align='left'){ctx.font='700 '+size+'px system-ui';ctx.fillStyle=color;ctx.textAlign=align;ctx.fillText(s,x,y)}
@@ -528,7 +521,6 @@ function update(){
     if(jumpBufferUntil&&Date.now()<=jumpBufferUntil&&p.ground){p.vy=-12;p.ground=false;jumpBufferUntil=0}
     else if(jumpBufferUntil&&Date.now()>jumpBufferUntil)jumpBufferUntil=0;
     const ax=(keys.right?1:0)-(keys.left?1:0);
-    if(ax)facing=ax;
     p.vx+=ax*.7;p.vx=Math.max(-5.2,Math.min(5.2,p.vx));if(!ax)p.vx*=world.friction
     p.x+=p.vx;p.vy=Math.min(12,p.vy+world.gravity);p.y+=p.vy;collide(p);p.x=Math.max(0,Math.min(world.width-p.w,p.x));
     if(p.y>H+80){playerDied('CREW WIPE // FALL DETECTED — BACK TO START')}
