@@ -383,7 +383,7 @@ function randomLevelData(seed){
 }
 function updateLevelUi(){
   const label=document.getElementById('levelLabel');
-  if(label)label.textContent=currentLevel===6?'RANDOM // SEED '+String(currentSeed).padStart(10,'0'):'LEVEL '+String(currentLevel+1).padStart(2,'0')+' — '+levelTemplates[currentLevel].name;
+  if(label)label.textContent=currentLevel<levelTemplates.length?'LEVEL '+String(currentLevel+1).padStart(2,'0')+' — '+levelTemplates[currentLevel].name:'LEVEL '+String(currentLevel+1).padStart(2,'0')+' — ENDLESS PROTOCOL · SEED '+String(currentSeed).padStart(10,'0');
   const hint=document.getElementById('puzzleHint');
   const count=document.getElementById('shardCounter');
   if(count)count.textContent='SHARDS '+world.shards.filter(s=>s.collected).length+' / '+world.shards.length;
@@ -401,10 +401,10 @@ function updateLevelControls(){
   });
 }
 function loadLevel(index,seed){
-  currentLevel=index===6?6:Math.max(0,Math.min(levelTemplates.length-1,index|0));
+  currentLevel=Math.max(0,Math.min(1000000,Math.floor(Number(index)||0)));
   currentSeed=(seed>>>0)||0;
   if(advanceTimer){window.clearTimeout(advanceTimer);advanceTimer=null}
-  const spec=currentLevel===6?extendLevel(randomLevelData(currentSeed),6):levelTemplates[currentLevel];
+  const spec=currentLevel<levelTemplates.length?levelTemplates[currentLevel]:extendLevel(randomLevelData(currentSeed),currentLevel);
   cameraX=0;jumpBufferUntil=0;portalReady=Object.create(null);
   world.goal={...spec.goal};
   world.platforms=spec.platforms.map(p=>({...p}));
@@ -617,8 +617,8 @@ function update(){
         advanceTimer=window.setTimeout(()=>{
           advanceTimer=null;
           if(!won)return;
-          const nextLevel=clearedLevel===6?6:(clearedLevel+1)%6;
-          const nextSeed=nextLevel===6?((Math.random()*0xffffffff)>>>0):0;
+          const nextLevel=clearedLevel+1;
+          const nextSeed=nextLevel>=levelTemplates.length?((Math.random()*0xffffffff)>>>0):0;
           requestLevel(nextLevel,nextSeed);
         },1800);
       }
@@ -777,8 +777,8 @@ document.getElementById('fullscreenBtn').addEventListener('click',async()=>{
     else if(document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen()}
   }catch{setGameStatus('Fullscreen is unavailable in this browser.')}
 });
-document.getElementById('prevLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?5:(currentLevel+levelTemplates.length-1)%levelTemplates.length,0));
-document.getElementById('nextLevelBtn').addEventListener('click',()=>requestLevel(currentLevel===6?0:(currentLevel+1)%levelTemplates.length,0));
+document.getElementById('prevLevelBtn').addEventListener('click',()=>requestLevel(Math.max(0,currentLevel-1),currentLevel-1>=levelTemplates.length?((Math.random()*0xffffffff)>>>0):0));
+document.getElementById('nextLevelBtn').addEventListener('click',()=>requestLevel(currentLevel+1,currentLevel+1>=levelTemplates.length?((Math.random()*0xffffffff)>>>0):0));
 document.getElementById('randomLevelBtn').addEventListener('click',()=>requestLevel(6,(Math.random()*0xffffffff)>>>0));
 document.getElementById('restartLevelBtn').addEventListener('click',restartCurrentLevel);
 document.getElementById('hintBtn').addEventListener('click',showPuzzleHint);
