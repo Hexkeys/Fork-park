@@ -49,7 +49,9 @@ The landing page follows the Exploding-fork repo's dark terminal-green style, wi
 - **Automatic progression:** after the shard/switch puzzle is solved and the whole party reaches the portal, the next stage loads automatically. The host advances the multiplayer party.
 - **Fullscreen display:** gameplay fills the entire viewport; use **⛶ FULLSCREEN** to request browser fullscreen as well.
 - **Level selection:** six designed levels — The Split, Neon Steps, Switchback, Crate Lab, Orbital Fork, and Final Protocol — plus **RANDOM** for repeatable, seed-based layouts.
-- **Puzzle goal:** collect the glowing shards and activate circuit switches to open gates, then have every player enter the portal. Portal entry is remembered while the crew catches up.
+- **Puzzle goal:** collect the glowing shards and activate circuit switches to open gates, then have every player enter the portal. Switches pulse visibly and show a **TAP / E** prompt when nearby; use **E**, **PULSE**, or tap a visible switch directly. Portal entry is remembered while the crew catches up.
+- **Livelier world:** shards rotate and pulse, portals breathe with a glow, switches animate when nearby, and touch controls react when pressed.
+- **Smoother multiplayer:** clients send movement at roughly 30 updates per second; the server relays fractional positions and velocity, and remote players ease toward received positions instead of snapping every update.
 - **Team wipe:** a fall or a moving hazard resets every player to the beginning of the current level and resets that level's puzzle progress. There are no mid-level respawn checkpoints.
 - **More mechanics:** moving spike hazards can wipe the crew, gold spring pads launch you upward, and **DASH / SHIFT** gives a short burst of speed with a cooldown.
 - **Extra buttons:** PREV, NEXT, RESTART, RANDOM, HINT, and PULSE / E. The PULSE button activates a nearby switch or gives a short boost.
@@ -62,7 +64,7 @@ The landing page follows the Exploding-fork repo's dark terminal-green style, wi
 2. Share the six-character room code.
 3. Friends open the same website, enter the code, and click **Join**.
 
-The server manages party rooms and supports up to eight players per party. It relays player positions, informs the party when members join or leave, validates codes and movement values, and transfers party-host status when the owner disconnects. WebSocket connections have a ping/pong heartbeat.
+The server manages party rooms and supports up to eight players per party. It relays player positions and velocity, informs the party when members join or leave, validates codes and movement values, and transfers party-host status when the owner disconnects. WebSocket connections have a ping/pong heartbeat.
 
 ## Testing and debugging
 
