@@ -139,6 +139,10 @@ button.secondary{background:#031008;border-color:#1c6b38;color:#7dca92}
 #gameLayout.active .level-toolbar button{min-width:0;min-height:35px;padding:7px 5px;font-size:10px}
 #gameLayout.active .puzzle-hud{position:absolute;z-index:23;top:58px;left:12px;width:min(420px,45vw);display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px 12px;background:#020b05c9;border:1px solid #1c6b38;backdrop-filter:blur(8px)}
 #gameLayout.active .small-button{background:#031008df;color:#39ff72;border-color:#1c6b38;border-radius:3px}
+#gameLayout.active .touch button{transition:transform .09s ease,background .12s ease,box-shadow .12s ease}
+#gameLayout.active .touch button:active{transform:scale(.94);background:#0b4b22;box-shadow:0 0 24px #39ff7266}
+#gameLayout.active .level-toolbar button:not(:disabled):active{transform:translateY(1px) scale(.98)}
+#gameLayout.active .puzzle-hud{box-shadow:0 0 22px #39ff7210}
 html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;overscroll-behavior:none}
 body:has(#gameLayout.active){overflow:hidden;touch-action:manipulation}
 #gameLayout.active .touch button{touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -394,7 +398,7 @@ function showPuzzleHint(){
   hint.textContent='HINT: the puzzle is solved. Lead your whole crew into the glowing portal.';
 }
 function activateSwitch(){
-  const p=mePlayer,near=world.switches.find(s=>!s.active&&Math.hypot((p.x+p.w/2)-s.x,(p.y+p.h/2)-s.y)<92);
+  const p=mePlayer,near=world.switches.find(s=>!s.active&&Math.hypot((p.x+p.w/2)-s.x,(p.y+p.h/2)-s.y)<145);
   if(near){
     near.active=true;world.gateOpen=true;setGameStatus('CIRCUIT OPEN // BRIDGE ENABLED');updateLevelUi();
     if(roomCode)sendWhenReady({type:'puzzle_action'});
@@ -492,9 +496,9 @@ function render(){
     for(let i=0;i<teeth;i++){const x=h.x+i*h.w/teeth;ctx.lineTo(x+h.w/teeth*.5,h.y);ctx.lineTo(x+h.w/teeth,h.y+h.h)}
     ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
   });
-  world.shards.forEach(s=>{if(s.collected)return;ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Math.PI/4);ctx.fillStyle='#bfff4f';ctx.shadowColor='#39ff72';ctx.shadowBlur=16;ctx.fillRect(-7,-7,14,14);ctx.restore()});
-  world.switches.forEach(s=>{ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,13,0,Math.PI*2);ctx.fillStyle=s.active?'#39ff72':'#ff8e3c';ctx.shadowColor=s.active?'#39ff72':'#ff8e3c';ctx.shadowBlur=17;ctx.fill();ctx.shadowBlur=0;text(s.active?'ON':'E',s.x,s.y+4,10,'#020b05','center');ctx.restore()});
-  const g=world.goal;ctx.save();ctx.shadowColor='#39ff72';ctx.shadowBlur=25;ctx.strokeStyle='#39ff72';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(g.x+g.w/2,g.y+g.h/2,g.w/2,g.h/2,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#39ff7220';ctx.fill();ctx.restore();text('EXIT',g.x+g.w/2,g.y-8,12,'#39ff72','center');
+  world.shards.forEach(s=>{if(s.collected)return;const pulse=1+Math.sin(Date.now()/130+s.x)*.18;ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Date.now()/850+s.x*.01);ctx.scale(pulse,pulse);ctx.fillStyle='#bfff4f';ctx.shadowColor='#39ff72';ctx.shadowBlur=20;ctx.fillRect(-7,-7,14,14);ctx.restore()});
+  world.switches.forEach(s=>{const pulse=1+Math.sin(Date.now()/150+s.x)*.12;ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,15*pulse,0,Math.PI*2);ctx.fillStyle=s.active?'#39ff72':'#ff8e3c';ctx.shadowColor=s.active?'#39ff72':'#ff8e3c';ctx.shadowBlur=22;ctx.fill();ctx.shadowBlur=0;text(s.active?'ON':'E',s.x,s.y+4,10,'#020b05','center');if(!s.active&&Math.hypot((mePlayer.x+mePlayer.w/2)-s.x,(mePlayer.y+mePlayer.h/2)-s.y)<145){ctx.strokeStyle='#ffd166';ctx.lineWidth=2;ctx.beginPath();ctx.arc(s.x,s.y,24+Math.sin(Date.now()/100)*3,0,Math.PI*2);ctx.stroke();text('TAP / E',s.x,s.y-24,10,'#ffd166','center')}ctx.restore()});
+  const g=world.goal;ctx.save();const portalPulse=1+Math.sin(Date.now()/180)*.08;ctx.translate(g.x+g.w/2,g.y+g.h/2);ctx.scale(portalPulse,portalPulse);ctx.shadowColor='#39ff72';ctx.shadowBlur=30;ctx.strokeStyle='#39ff72';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(0,0,g.w/2,g.h/2,0,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#39ff7220';ctx.fill();ctx.restore();text('EXIT',g.x+g.w/2,g.y-8,12,'#39ff72','center');
   players.forEach(drawFork);
   ctx.restore();
   if(won){ctx.fillStyle='#020b05dd';ctx.fillRect(0,0,W,H);text('LEVEL CLEARED!',W/2,220,42,'#39ff72','center');text('Puzzle solved. Crew synchronized.',W/2,265,20,'#e0ffe8','center');text('NEXT LEVEL LOADING AUTOMATICALLY…',W/2,305,15,'#bdebc9','center')}
@@ -518,7 +522,7 @@ function update(){
     if(p.y>H+80){playerDied('CREW WIPE // FALL DETECTED — BACK TO START')}
     else if(touchingHazard(p)){playerDied('CREW WIPE // HAZARD HIT — BACK TO START')}
   }
-  for(const [id,r] of Object.entries(remoteStates)){const q=players.get(id);if(q){q.x=r.x;q.y=r.y;q.name=r.name||q.name||'Fork buddy';q.color=r.color||q.color}}
+  for(const [id,r] of Object.entries(remoteStates)){const q=players.get(id);if(q){const dx=r.x-q.x,dy=r.y-q.y;if(Math.abs(dx)>130||Math.abs(dy)>130){q.x=r.x;q.y=r.y}else{q.x+=dx*.34;q.y+=dy*.34}q.name=r.name||q.name||'Fork buddy';q.color=r.color||q.color}}
   for(const shard of world.shards){
     if(shard.collected)continue;
     for(const player of players.values()){
@@ -551,7 +555,7 @@ function update(){
       }
     }else setGameStatus('REACH THE PORTAL');
   }
-  if(socket&&socket.readyState===WebSocket.OPEN&&roomCode&&Date.now()-lastSend>50){try{socket.send(JSON.stringify({type:'state',x:p.x,y:p.y}));lastSend=Date.now()}catch{setNetworkStatus('Movement sync interrupted. Reconnecting…')}}
+  if(socket&&socket.readyState===WebSocket.OPEN&&roomCode&&Date.now()-lastSend>33){try{socket.send(JSON.stringify({type:'state',x:p.x,y:p.y,vx:p.vx,vy:p.vy}));lastSend=Date.now()}catch{setNetworkStatus('Movement sync interrupted. Reconnecting…')}}
   requestAnimationFrame(update);
 }
 function roster(){
@@ -712,6 +716,8 @@ document.getElementById('randomLevelBtn').addEventListener('click',()=>requestLe
 document.getElementById('restartLevelBtn').addEventListener('click',restartCurrentLevel);
 document.getElementById('hintBtn').addEventListener('click',showPuzzleHint);
 document.getElementById('actionBtn').addEventListener('click',activateSwitch);
+// Tap a nearby switch directly in the world as well as using E / PULSE.
+canvas.addEventListener('pointerdown',event=>{const rect=canvas.getBoundingClientRect();const x=(event.clientX-rect.left)*W/rect.width+cameraX;const y=(event.clientY-rect.top)*H/rect.height;if(world.switches.some(s=>!s.active&&Math.hypot(s.x-x,s.y-y)<48))activateSwitch()});
 window.addEventListener('keydown',e=>{if(e.target instanceof HTMLElement&&e.target.matches('input,textarea,select'))return;if(e.key.toLowerCase()==='e'&&!e.repeat)activateSwitch()});
 loadLevel(0,0);
 
