@@ -145,7 +145,7 @@ test('web service health, party flow, relayed positions, validation, and party c
     assert.equal(hostLevel.seed, 123456);
     assert.equal(guestLevel.seed, 123456);
 
-    const badLevel = await sendAndWait(host, { type: 'set_level', level: 99, seed: 1 }, (m) => m.type === 'error');
+    const badLevel = await sendAndWait(host, { type: 'set_level', level: 1000001, seed: 1 }, (m) => m.type === 'error');
     assert.equal(badLevel.code, 'INVALID_LEVEL');
 
     const hostPuzzle = nextMessage(host, (m) => m.type === 'puzzle_action');
