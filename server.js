@@ -164,7 +164,7 @@ function createForkParkServer() {
     room.players.set(player.id, player);
     socket.roomCode = room.code;
     socket.playerId = player.id;
-    socket.lastStateAt = Date.now();
+    socket.lastStateAt = 0;
     return player;
   }
 
