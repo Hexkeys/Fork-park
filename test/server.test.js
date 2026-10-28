@@ -66,7 +66,7 @@ test('web service health, party flow, relayed positions, validation, and party c
     assert.match(csp, /script-src 'nonce-[^']+'/);
     assert.doesNotMatch(csp, /script-src[^;]*'unsafe-inline'/);
     const nonce = csp.match(/script-src 'nonce-([^']+)'/)[1];
-    assert.match(homeHtml, new RegExp('<script nonce="' + nonce + '">'));
+    assert.ok(homeHtml.includes('<script nonce="' + nonce + '">'));
     assert.match(home.headers.get('x-content-type-options'), /nosniff/);
     assert.equal(home.headers.get('x-frame-options'), 'DENY');
 
