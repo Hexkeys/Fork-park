@@ -52,7 +52,8 @@ function cleanPlayerName(value, fallback) {
 
 function createForkParkServer() {
   const rooms = new Map();
-  const indexPath = path.join(__dirname, 'index.html');
+  const productionIndexPath = path.join(__dirname, 'dist', 'index.html');
+  const indexPath = fs.existsSync(productionIndexPath) ? productionIndexPath : path.join(__dirname, 'index.html');
 
   const server = http.createServer((request, response) => {
     const requestUrl = new URL(request.url || '/', 'http://localhost');
