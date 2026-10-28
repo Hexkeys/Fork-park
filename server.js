@@ -1,7 +1,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const { randomInt, randomUUID } = require('node:crypto');
+const { randomBytes, randomInt, randomUUID } = require('node:crypto');
 const { WebSocket, WebSocketServer } = require('ws');
 
 const PORT = Number(process.env.PORT) || 10000;
@@ -61,6 +61,8 @@ function createForkParkServer() {
 
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.setHeader('X-Frame-Options', 'DENY');
+    response.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       response.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8', Allow: 'GET, HEAD' });
@@ -85,11 +87,17 @@ function createForkParkServer() {
           response.end('Game page could not be loaded');
           return;
         }
+        const nonce = randomBytes(18).toString('base64');
+        const page = content.toString('utf8').replace(/<script\\b/gi, '<script nonce="' + nonce + '"');
+        response.setHeader(
+          'Content-Security-Policy',
+          "default-src 'self'; script-src 'nonce-" + nonce + "'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ws: wss:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+        );
         response.writeHead(200, {
           'Content-Type': 'text/html; charset=utf-8',
           'Cache-Control': 'no-cache',
         });
-        response.end(request.method === 'HEAD' ? undefined : content);
+        response.end(request.method === 'HEAD' ? undefined : page);
       });
       return;
     }
