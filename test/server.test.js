@@ -87,14 +87,14 @@ test('web service health, party flow, relayed positions, validation, and party c
 
     const moveMessage = nextMessage(
       host,
-      (m) => m.type === 'player_state' && m.player && m.player.id === firstGuestId && m.player.x === 1234.5
+      (m) => m.type === 'player_state' && m.player && m.player.id === firstGuestId && m.player.x === 113
     );
-    firstGuest.send(JSON.stringify({ type: 'state', x: 1234.5, y: 234.25, vx: 4.5, vy: -2.25 }));
+    firstGuest.send(JSON.stringify({ type: 'state', x: 113, y: 410, vx: 4.5, vy: 0 }));
     const relayed = await moveMessage;
-    assert.equal(relayed.player.x, 1234.5);
-    assert.equal(relayed.player.y, 234.25);
+    assert.equal(relayed.player.x, 113);
+    assert.equal(relayed.player.y, 410);
     assert.equal(relayed.player.vx, 4.5);
-    assert.equal(relayed.player.vy, -2.25);
+    assert.equal(relayed.player.vy, 0);
     assert.equal(relayed.player.id, firstGuestId);
 
     const overflow = await connect();
