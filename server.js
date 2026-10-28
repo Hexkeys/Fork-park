@@ -125,7 +125,7 @@ function createForkParkServer() {
     socket.rateWindowAt = Date.now();
     socket.rateMessageCount = 0;
     socket.rateLimitStrikes = 0;
-    socket.lastStateAt = Date.now();
+    socket.lastStateAt = 0;
     const room = rooms.get(code);
     if (!room || !room.players.has(playerId)) return;
 
@@ -364,8 +364,8 @@ function createForkParkServer() {
       }
 
       const now = Date.now();
-      const elapsed = Math.max(1, now - (socket.lastStateAt || now));
-      if (elapsed < 25) return;
+      const elapsed = socket.lastStateAt ? Math.max(1, now - socket.lastStateAt) : 100;
+      if (socket.lastStateAt && elapsed < 25) return;
       if (!Number.isFinite(message.x) || !Number.isFinite(message.y) ||
           !Number.isFinite(message.vx) || !Number.isFinite(message.vy)) return;
 
