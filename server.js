@@ -88,7 +88,7 @@ function createForkParkServer() {
           return;
         }
         const nonce = randomBytes(18).toString('base64');
-        const page = content.toString('utf8').replace(/<script\\b/gi, '<script nonce="' + nonce + '"');
+        const page = content.toString('utf8').replace(/<script\b/gi, '<script nonce="' + nonce + '"');
         response.setHeader(
           'Content-Security-Policy',
           "default-src 'self'; script-src 'nonce-" + nonce + "'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ws: wss:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
