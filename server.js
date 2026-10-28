@@ -121,6 +121,10 @@ function createForkParkServer() {
 
     socket.roomCode = null;
     socket.playerId = null;
+    socket.rateWindowAt = Date.now();
+    socket.rateMessageCount = 0;
+    socket.rateLimitStrikes = 0;
+    socket.lastStateAt = Date.now();
     const room = rooms.get(code);
     if (!room || !room.players.has(playerId)) return;
 
@@ -159,6 +163,7 @@ function createForkParkServer() {
     room.players.set(player.id, player);
     socket.roomCode = room.code;
     socket.playerId = player.id;
+    socket.lastStateAt = Date.now();
     return player;
   }
 
@@ -358,14 +363,29 @@ function createForkParkServer() {
       }
 
       const now = Date.now();
-      if (now - (socket.lastStateAt || 0) < 25) return;
-      socket.lastStateAt = now;
-      if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
+      const elapsed = Math.max(1, now - (socket.lastStateAt || now));
+      if (elapsed < 25) return;
+      if (!Number.isFinite(message.x) || !Number.isFinite(message.y) ||
+          !Number.isFinite(message.vx) || !Number.isFinite(message.vy)) return;
 
-      player.x = Math.max(0, Math.min(4000, message.x));
-      player.y = Math.max(-100, Math.min(600, message.y));
-      player.vx = Number.isFinite(message.vx) ? Math.max(-20, Math.min(20, message.vx)) : 0;
-      player.vy = Number.isFinite(message.vy) ? Math.max(-20, Math.min(20, message.vy)) : 0;
+      const nextX = Math.max(0, Math.min(4000, message.x));
+      const nextY = Math.max(-100, Math.min(600, message.y));
+      // Reject obvious teleport/speed hacks. This is a lightweight plausibility
+      // check; full server-authoritative physics would be needed for stronger protection.
+      const xLimit = elapsed > 250 ? 45 : Math.max(18, elapsed * 0.35 + 7);
+      const yLimit = elapsed > 250 ? 90 : Math.max(34, elapsed * 0.7 + 12);
+      if (Math.abs(nextX - player.x) > xLimit || Math.abs(nextY - player.y) > yLimit ||
+          Math.abs(message.vx) > 8 || Math.abs(message.vy) > 16) {
+        socket.suspiciousStates = (socket.suspiciousStates || 0) + 1;
+        if (socket.suspiciousStates >= 8) socket.close(1008, 'Invalid movement');
+        return;
+      }
+      socket.suspiciousStates = Math.max(0, (socket.suspiciousStates || 0) - 1);
+      socket.lastStateAt = now;
+      player.x = nextX;
+      player.y = nextY;
+      player.vx = Math.max(-8, Math.min(8, message.vx));
+      player.vy = Math.max(-16, Math.min(16, message.vy));
       broadcast(room, {
         type: 'player_state',
         player: publicPlayer(player),
@@ -383,6 +403,17 @@ function createForkParkServer() {
 
     socket.on('pong', () => { socket.isAlive = true; });
     socket.on('message', (raw) => {
+      const now = Date.now();
+      if (now - socket.rateWindowAt >= 1000) {
+        socket.rateWindowAt = now;
+        socket.rateMessageCount = 0;
+      }
+      socket.rateMessageCount += 1;
+      if (socket.rateMessageCount > 90) {
+        socket.rateLimitStrikes += 1;
+        if (socket.rateLimitStrikes >= 2) socket.close(1008, 'Message rate limit exceeded');
+        return;
+      }
       let message;
       try {
         message = JSON.parse(raw.toString());
