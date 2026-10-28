@@ -5,14 +5,16 @@
   "description": "Fork Park: a cooperative fork-themed platform game with WebSocket parties",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "npm run build && node server.js",
     "test": "node --test",
-    "check": "node scripts/check-inline-js.cjs"
+    "check": "node scripts/check-inline-js.cjs",
+    "build": "node scripts/build.cjs"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
-    "ws": "^8.22.0"
+    "ws": "^8.22.0",
+    "terser": "^5.39.0"
   }
 }
