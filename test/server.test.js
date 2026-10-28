@@ -59,7 +59,16 @@ test('web service health, party flow, relayed positions, validation, and party c
 
     const home = await fetch(baseUrl + '/');
     assert.equal(home.status, 200);
-    assert.match(await home.text(), /Fork Park/);
+    const homeHtml = await home.text();
+    assert.match(homeHtml, /Fork Park/);
+    const csp = home.headers.get('content-security-policy');
+    assert.ok(csp, 'game page should set a Content Security Policy');
+    assert.match(csp, /script-src 'nonce-[^']+'/);
+    assert.doesNotMatch(csp, /script-src[^;]*'unsafe-inline'/);
+    const nonce = csp.match(/script-src 'nonce-([^']+)'/)[1];
+    assert.match(homeHtml, new RegExp('<script nonce="' + nonce + '">'));
+    assert.match(home.headers.get('x-content-type-options'), /nosniff/);
+    assert.equal(home.headers.get('x-frame-options'), 'DENY');
 
     const host = await connect();
     const created = await sendAndWait(host, { type: 'create_party', name: 'Captain Fork' }, (m) => m.type === 'party_created');
